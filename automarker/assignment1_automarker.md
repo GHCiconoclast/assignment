@@ -21,7 +21,7 @@
 
 3. Enter `ASGNM` directory and generate tests with:
     ```
-    swipl -g '[automark], gentest, halt.' -t 'halt(1)'`.
+    swipl -g '[automark], gentest, halt.' -t 'halt(1)'
     ```
 
 4. Do `sh ./runtest.sh ../STUDENT_SUBMISSIONS`.
