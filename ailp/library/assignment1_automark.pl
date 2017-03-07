@@ -3,7 +3,9 @@
 :- dynamic am_student/1.
 
 :- prolog_load_context(directory, Sys),
-  asserta(user:file_search_path(local_library, Sys)).
+  asserta(user:file_search_path(local_library, Sys)),
+  atomic_list_concat([Sys, "..", ".."], "/", Root),
+  asserta(user:file_search_path(local_root, Root)).
 
 :- use_module(local_library('assignment1_automarkrc.pl')).
 
@@ -11,7 +13,8 @@ gentest:-
 	automarkrc(LabFile,_,AnswersFile,TestFile,Parts),
 	use_module(local_library(LabFile)),
 	use_module(local_library(AnswersFile)),
-	tell(TestFile),
+  absolute_file_name(local_root(TestFile), TF),
+	tell(TF),
 	gentest_parts(Parts).
 
 gentest_parts([]):-
@@ -62,7 +65,7 @@ test_prelims1(CwFile,Parts):-
   ; use_module(local_library(LabFile))
   ),
 	( TestFile = '' -> true
-  ; consult(local_library(TestFile))
+  ; consult(local_root(TestFile))
   ),
 	tell('comments.txt'),
 	catch(consult('commentsPF.pl'),_,true).

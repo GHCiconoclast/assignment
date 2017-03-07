@@ -6,3 +6,6 @@
 /assignment1_*.pl
 /assigment2_*.pl
 /assignment2_*.pl
+
+# Automarker test files
+test*.pl

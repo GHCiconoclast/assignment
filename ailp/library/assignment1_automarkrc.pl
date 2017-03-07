@@ -17,7 +17,7 @@ automarkrc(
          'assignment1_library.pl'    % given Prolog code
         ,'ailp_assignment1.pl'     % submission
         ,'assignment1_answers.pl'  % model answers
-        ,'../../test1.pl'     % ground test queries
+        ,'test1.pl'     % ground test queries
         ,[part(q1,1,[list(true->q1(Q1)->true)])
          ,part(q2a,1,[list(true->q2a(Q2a)->true)])
          ,part(q2b,1,[list(true->q2b(Q2b)->true)])
@@ -151,4 +151,3 @@ answerQ4d(SP, Path) :-
         SP=p(3,4) -> Path = [p(3,4),p(4,4),p(4,3),p(3,3),p(2,3),p(2,4),p(1,4),p(1,3),p(1,2),p(1,1),p(2,1),p(2,2),p(3,2),p(4,2),p(4,1),p(3,1)];
         SP=p(4,4) -> Path = [p(4,4),p(3,4),p(2,4),p(1,4),p(1,3),p(2,3),p(3,3),p(4,3),p(4,2),p(4,1),p(3,1),p(3,2),p(2,2),p(1,2),p(1,1),p(2,1)]
         ).
-

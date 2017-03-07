@@ -28,6 +28,13 @@ if [ "$1" == "gentest" ] ; then
   exit
 fi
 
+testfile=`find -E . -regex '\./test.*\.pl'`
+if [ ! -e "$testfile" ] ; then
+  echo "Test file missing in the root of the repository"
+  echo "Please run \`./automark.sh gentest\` first"
+  exit
+fi
+
 # if asked generate csv for FEN upload
 if [ "$2" == "safe" ] ; then
   if [ -d "$subs" ] ; then
