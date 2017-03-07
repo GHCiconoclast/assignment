@@ -56,16 +56,22 @@ if [ -d "$subs" ] ; then
     # check for a file: assignment1_xxxxx.pl
     userfile="assignment1_${student##*/}.pl"
     if [ ! -e "$userfile" ] ; then
-      echo "$userfile does not exist."
-      echo "Which of the available files would you like to use:"
-      echo =~=~=~=~=~=
-      ls
-      echo =~=~=~=~=~=
-      while [ ! -e "$userfile" ] && [ "next" != "$userfile" ] ; do
-        printf "Please input a correct filename\n> "
-        read userfile
-      done
-      echo "Checking $userfile"
+      echo "$userfile does not exist"
+      userfile=`find -E . -regex '\.(/daylate/|/weeklate/|/)assig(nm|m)ent1_[0-9]{5}\.pl'`
+      if [ ! -e "$userfile" ] ; then
+        echo "could not locate submission"
+        echo "Which of the available files would you like to use:"
+        echo =~=~=~=~=~=
+        ls
+        echo =~=~=~=~=~=
+        while [ ! -e "$userfile" ] && [ "next" != "$userfile" ] ; do
+          printf "Please input a correct filename\n> "
+          read userfile
+        done
+        echo "Checking $userfile"
+      else
+        echo "$userfile found"
+      fi
     fi
 
     # link the file to default name
