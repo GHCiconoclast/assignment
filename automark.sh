@@ -1,19 +1,32 @@
 #!/bin/sh
 
-# usage
-# sh runtest.sh path/to/directory/or/file [check one question]
+userdir=`pwd`
 scriptlocation=`dirname $0`
+librarylocation="$userdir/$scriptlocation/ailp/library"
+automarklocation="$librarylocation/assignment1_automark.pl"
 
 # define a directory with submissions or a single file
 if [ -z "$1"  ] ; then
   echo "Please supply and argument containing a path to a folder with submissions"
-  echo "e.g. \`sh ./ASGNM/runtest.sh ./2015-2016\`"
+  echo "    \`./runtest.sh ./ASGNM1\`"
   echo "Or just a single submission file"
-  echo "e.g. \`sh ./ASGNM/runtest.sh ./2015-2016/12345/ailp_assignment1_12345.pl\`"
+  echo "    \`./runtest.sh ./ASGNM1/12345/assignment1_12345.pl\`"
+  echo "You can also check particular question"
+  echo "    \`./runtest.sh ./ASGNM1 question\` or"
+  echo "    \`./runtest.sh ./ASGNM1/12345/assignment1_12345.pl question\`"
+  echo "\nAlternatively you can generate tests"
+  echo "    \`./runtest.sh gentest\`"
+  echo "or generate csv file for FEN submission"
+  echo "    \`./runtest.sh ./ASGNM1 safe\`"
   exit
 fi
 subs="$1"
-maindir=`pwd`
+
+# generate tests if asked
+if [ "$1" == "gentest" ] ; then
+  swipl -g "['$automarklocation'], gentest, halt." -t "halt(1)"
+  exit
+fi
 
 # if asked generate csv for FEN upload
 if [ "$2" == "safe" ] ; then
@@ -40,8 +53,8 @@ if [ -d "$subs" ] ; then
     echo ${student##*/}
     echo ======
     cd $student
-    # check for a file: ailp_assignment1_xxxxx.pl
-    userfile="ailp_assig*ment1_${student##*/}.pl"
+    # check for a file: assignment1_xxxxx.pl
+    userfile="assignment1_${student##*/}.pl"
     if [ ! -e "$userfile" ] ; then
       echo "$userfile does not exist."
       echo "Which of the available files would you like to use:"
@@ -71,8 +84,7 @@ if [ -d "$subs" ] ; then
         echo "*** Local runtest.pl detected ***";
         swipl -g "assert(am_student(${student##*/}))" -f ./runtest.pl >& stats.txt
       else
-        #swipl -g "assert(am_student(${student##*/}))" -f $maindir/ASGNM/runtest.pl >& stats.txt
-        swipl -g "assert(am_student(${student##*/})), ['$maindir/$scriptlocation/automark.pl'], test, halt. %(test->halt ; writes(['Automatic testing failed.',nl]),told,halt)." -t 'halt(1)' >& stats.txt
+        swipl -g "assert(am_student(${student##*/})), ['$automarklocation'], test, halt. %(test->halt ; writes(['Automatic testing failed.',nl]),told,halt)." -t 'halt(1)' >& stats.txt
       fi
       touch am
       # check candidate number
@@ -89,7 +101,7 @@ if [ -d "$subs" ] ; then
       fi
     fi
 
-    cd $maindir
+    cd $userdir
   done
   # check if file
 elif [ -e "$subs" ] ; then
@@ -117,8 +129,7 @@ elif [ -e "$subs" ] ; then
         echo "*** Local runqtest.pl detected ***";
         swipl -g "assert(am_student($candidate))" -f ./runqtest.pl
       else
-        #swipl -g "assert(am_student($candidate))" -f $maindir/ASGNM/runqtest.pl
-        swipl -g "['$maindir/$scriptlocation/automark.pl'], qtest, halt. %(test->halt ; writes(['Automatic testing failed.',nl]),told,halt)." -t 'halt(1)'
+        swipl -g "['$automarklocation'], qtest, halt. %(test->halt ; writes(['Automatic testing failed.',nl]),told,halt)." -t 'halt(1)'
       fi
     # check the whole file
     else
@@ -127,8 +138,7 @@ elif [ -e "$subs" ] ; then
         echo "*** Local runtest.pl detected ***";
         swipl -g "assert(am_student($candidate))" -f ./runtest.pl >& stats.txt
       else
-        #swipl -g "assert(am_student($candidate))" -f $maindir/ASGNM/runtest.pl >& stats.txt
-        swipl -g "assert(am_student($candidate)), ['$maindir/$scriptlocation/automark.pl'], test, halt. %(test->halt ; writes(['Automatic testing failed.',nl]),told,halt)." -t 'halt(1)' >& stats.txt
+        swipl -g "assert(am_student($candidate)), ['$automarklocation'], test, halt. %(test->halt ; writes(['Automatic testing failed.',nl]),told,halt)." -t 'halt(1)' >& stats.txt
       fi
     fi
     touch am
@@ -145,7 +155,7 @@ elif [ -e "$subs" ] ; then
       sleep 5
     fi
   fi
-  cd $maindir
+  cd $userdir
   # neither file nor directory
 else
   echo "$subs is neither a directory nor a file."

@@ -1,3 +1,14 @@
+:- module(automarkrc,
+  [switch/2,
+   search_bounds/2,
+   automarkrc/5,
+   cn2sp/2,
+   answerQ4a/2,
+   answerQ4b/2,
+   answerQ4c/2,
+   answerQ4d/2
+  ]).
+
 switch(self_assessment,off).
 
 search_bounds(100,10).	% resolution depth, time in seconds
@@ -6,7 +17,7 @@ automarkrc(
          'assignment1_library.pl'    % given Prolog code
         ,'ailp_assignment1.pl'     % submission
         ,'assignment1_answers.pl'  % model answers
-        ,'test1.pl'     % ground test queries
+        ,'../../test1.pl'     % ground test queries
         ,[part(q1,1,[list(true->q1(Q1)->true)])
          ,part(q2a,1,[list(true->q2a(Q2a)->true)])
          ,part(q2b,1,[list(true->q2b(Q2b)->true)])
@@ -27,12 +38,12 @@ automarkrc(
 
 % similar to start_position_personal in assignment1_library.pl
 cn2sp(Z, p(X,Y)):-
-	ailp_grid_size(N),
+	assignment1:ailp_grid_size(N),
 	X is mod(Z,N) + 1,
 	number_codes(Z,[A|[Y1|B]]),
 	Y2 is Y1 - 48,
 	Y is mod(Y2,N) + 1.
-	
+
 
 % Q4a
 % this will be a look-up table with 16 possibilities

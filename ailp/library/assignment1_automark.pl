@@ -1,13 +1,16 @@
-%:- module(automark,[gentest/0, test/0]).
+:- module(automark,[gentest/0, test/0]).
 
-:-['.automarkrc.pl'].
+:- dynamic am_student/1.
 
-:-dynamic am_student/1.
+:- prolog_load_context(directory, Sys),
+  asserta(user:file_search_path(local_library, Sys)).
+
+:- use_module(local_library('assignment1_automarkrc.pl')).
 
 gentest:-
 	automarkrc(LabFile,_,AnswersFile,TestFile,Parts),
-	consult(LabFile),
-	consult(AnswersFile),
+	use_module(local_library(LabFile)),
+	use_module(local_library(AnswersFile)),
 	tell(TestFile),
 	gentest_parts(Parts).
 
@@ -55,8 +58,12 @@ qtest:-
 test_prelims1(CwFile,Parts):-
 	automarkrc(LabFile,CwFile,_,TestFile,Parts),
 	% we assume we're in the student's sub-directory
-	( LabFile = '' -> true ; concat_atom(['../',LabFile],LF),consult(LF) ),
-	( TestFile = '' -> true ; concat_atom(['../',TestFile],TF),consult(TF) ),
+	( LabFile = '' -> true
+  ; use_module(local_library(LabFile))
+  ),
+	( TestFile = '' -> true
+  ; consult(local_library(TestFile))
+  ),
 	tell('comments.txt'),
 	catch(consult('commentsPF.pl'),_,true).
 
@@ -129,7 +136,7 @@ qtest_queries([Q|Qs]):-
 	qtest_queries(Qs).
 
 qtest_query(Q0):-
-	Q0 =.. [Kind,(Pre->Q1->Post)], 
+	Q0 =.. [Kind,(Pre->Q1->Post)],
 	telling(Old),tell(user),
 	am_portray_clause(Q0),
 	write('CALL? [y/n] '),
@@ -194,7 +201,7 @@ count_query(Q->Vars0/Post):-
 	( PPos is TP+FP,PPos>0 -> R is TP/PPos ; R=0 ),
 	( PR is P+R,PR>0 -> F is (2*P*R)/PR ; F=0 ),
 	am_writes([tab(5),'Score: ',F,' (Precision: ',P,'; Recall: ',R,')',nl]),
-	( F=1 -> am_writes([same_answers,nl]) 
+	( F=1 -> am_writes([same_answers,nl])
 	; otherwise ->  ( FP>0 -> am_writes([ am_found|LFP]),am_nl ; true ),
 			( FN>0 -> am_writes([you_found|LFN]) ; true )
 	),am_nl,am_nl.
@@ -353,14 +360,14 @@ am_error(Error):-
 
 am_error(self_assessment(L),['no self-assessment for question ',L,'.'],am_nl).
 am_error(nofile(F),['file does not exist: ',F,'.',nl],am_nl).
-am_error(undefined(P),['no clause for query: ',clause(P),'.'],am_nl). 
-am_error(exception(Q),['query raises exception: ',clause(Q)],am_nl). 
-am_error(exception(Q,E),['query raises exception: ',clause(Q)],(append('comments.txt'),print_message(error,E),told)). 
-am_error(failure(Q),['query fails: ',clause(Q)],am_nl). 
+am_error(undefined(P),['no clause for query: ',clause(P),'.'],am_nl).
+am_error(exception(Q),['query raises exception: ',clause(Q)],am_nl).
+am_error(exception(Q,E),['query raises exception: ',clause(Q)],(append('comments.txt'),print_message(error,E),told)).
+am_error(failure(Q),['query fails: ',clause(Q)],am_nl).
 am_error(depth(Q,D),['resolution depth bound (',D,') reached: ',clause(Q)],am_nl).
 am_error(time(Q,T),['time bound (',T,') reached: ',clause(Q)],am_nl).
-am_error(variable(Q),['query returns variable: ',clause(Q)],am_nl). 
-am_error(incorrect(A,B),['incorrect answer:   ',answers(A),'               -- too different from: ',answers(B)],am_nl). 
+am_error(variable(Q),['query returns variable: ',clause(Q)],am_nl).
+am_error(incorrect(A,B),['incorrect answer:   ',answers(A),'               -- too different from: ',answers(B)],am_nl).
 %am_error(nontermination(Q),['depth or time bound reached: ',clause(Q)],am_nl). % obsolete
 
 am_write_comments(C,M):-

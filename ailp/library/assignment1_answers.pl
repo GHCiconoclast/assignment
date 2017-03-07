@@ -1,3 +1,19 @@
+:- module(assignment1_answers,
+  [candidate_number/1,
+   q1/1,
+   q2a/1,
+   q2b/1,
+   q3/1,
+   q4a/1,
+   q4b/1,
+   q4c/1,
+   q4d/1,
+   q5_corner_move/0,
+   q5_corner_move2/0,
+   q6_spiral/1,
+   q6_spiral_ks/2
+  ]).
+
 %% --------------------------- %%
 %% assignment 1 sample answers
 %% --------------------------- %%

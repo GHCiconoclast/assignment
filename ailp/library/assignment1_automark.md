@@ -1,35 +1,17 @@
 # Artificial Intelligence and Logic Programming Assignment 1 automarker #
 1. Download student files from FEN.
-2. Make sure that your file structure is as follows:
+2. To generate tests do:
     ```
-    .
-    ├── ASGNM
-    │   ├── assignment1_answers.pl
-    │   ├── assignment1_library.pl
-    │   ├── automark.pl
-    │   ├── automarkrc.pl
-    │   └── runtest.sh
-    ├── STUDENT_SUBMISSIONS
-    │   ├── STUDENT_CANDIDATE_NUMBER
-    |   │   └── ailp_assignment1_xxxxx.pl
-    |   .
-    |   .
-    |   .
-    |   └
-    └── assignment1_automarker.md
+    ./automark.sh gentest
     ```
+  make sure that `test1.pl` is in the same directory as `automark.sh`
 
-3. Enter `ASGNM` directory and generate tests with:
-    ```
-    swipl -g '[automark], gentest, halt.' -t 'halt(1)'
-    ```
-
-4. Do `sh ./runtest.sh ../STUDENT_SUBMISSIONS`.
+3. Do `./automark.sh /path/to/ASGNM1`.
 
 ## Answers comparison ##
 If you need to compare answers for the *q4* then do the following in `swipl` interpreter:
 ```
-['ASGNM/automarkrc'].
+['ailp/library/assignment1_automarkrc.pl'].
 
 ailp_start_position(A),q4a(B),answerQ4a(A,B).
 ailp_start_position(A),q4b(B),answerQ4b(A,B).
