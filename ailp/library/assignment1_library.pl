@@ -128,10 +128,10 @@ complete(L) :-
   ailp_show_complete.
 
 new_pos(p(X,Y), M, p(X1,Y1)) :-
-  ( M = s -> X1 =  X,    Y1 is Y+1
-  ; M = n -> X1 =  X,    Y1 is Y-1
-  ; M = e -> X1 is X+1,  Y1 =  Y
-  ; M = w -> X1 is X-1,  Y1 =  Y
+  ( M = s -> X1 =  X,   Y1 is Y+1
+  ; M = n -> X1 =  X,   Y1 is Y-1
+  ; M = e -> X1 is X+1, Y1 =  Y
+  ; M = w -> X1 is X-1, Y1 =  Y
   ),
   X1 >= 1, Y1 >=1,
   ailp_grid_size(N),
