@@ -20,15 +20,15 @@ automarkrc(
   ,'test1.pl'               % ground test queries
   ,[part(q1,1,[list(true->q1(Q1)->true)])
    ,part(q2a,1,[list(true->q2a(Q2a)->true)])
-   ,part(q2b,1,[list(true->q2b(Q2b)->true)])
-   %,part(q2b,1,[check(true->q2b(-Q2b)->[X2b]/(Q2b=X2b))])
+   ,part(q2b,1,[check(true->q2b(-Q2b)->[X2b]/(Q2b=X2b))])
+   %,part(q2b,1,[check(true->q2b(-Q2b)->[_]/(answerQ2b(Q2b)))])
    ,part(q3,1,[check(true->q3(-Q3)->[X3]/(Q3=X3))])
    ,part(q4a,2,[check((candidate_number(CN),cn2sp(CN,SP))->q4a(-Q4a)->[_]/(answerQ4a(SP,X4a),X4a=Q4a))])
    ,part(q4b,2,[check((candidate_number(CN),cn2sp(CN,SP))->q4b(-Q4b)->[_]/(answerQ4b(SP,X4b),X4b=Q4b))])
    ,part(q4c,2,[check((candidate_number(CN),cn2sp(CN,SP))->q4c(-Q4c)->[_]/(answerQ4c(SP,X4c),X4c=Q4c))])
    ,part(q4d,2,[check((candidate_number(CN),cn2sp(CN,SP))->q4d(-Q4d)->[_]/(answerQ4d(SP,X4d),X4d=Q4d))])
-   ,part(q5a,3,[])
-   ,part(q5b,3,[])
+   ,part(q5a,3,[skip((true->true->true))])
+   ,part(q5b,3,[skip((true->true->true))])
    ,part(q6,5,[list(true->q6_spiral(L)->true)])
    ,part(extra,2,[])
    ]
@@ -44,11 +44,12 @@ cn2sp(Z, p(X,Y)):-
   Y is mod(Y2,N) + 1.
 
 % Q1, Q2a, Q2b and Q3 answers -- the same for all students
-answerQ1(ailp_start_position(p(X,Y))).
-answerQ1(ailp_start_position(P)).
+answerQ1(ailp_start_position(p(X,Y))):-var(X),var(Y).
+answerQ1(ailp_start_position(P)):-var(P).
 answerQ2a(new_pos(p(1,1), s, p(X,Y))).
 answerQ2a(new_pos(p(1,1), s, P)).
 answerQ2b(109).
+q2b(109).
 answerQ3([s,e,w,n]).
 
 % Q4a -- a look-up table with 16 possibilities
