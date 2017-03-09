@@ -1,4 +1,8 @@
-:- module(automark,[gentest/0, test/0]).
+:- module(automark,
+          [gentest/0,
+           test/0,
+           candidate_number/1 % reexport candidate_number form user submission
+          ]).
 
 :- dynamic am_student/1.
 
@@ -12,6 +16,7 @@
 gentest :-
   automarkrc(LabFile,_,AnswersFile,TestFile,Parts),
   use_module(local_library(LabFile)),
+  assignment1:set_switch(headless, true),
   use_module(local_library(AnswersFile)),
   absolute_file_name(local_root(TestFile), TF),
   tell(TF),
@@ -46,14 +51,14 @@ gentest_query(_).
 
 test :-
   test_prelims1(CwFile,Parts),
-  ( catch(consult(CwFile),_,fail) -> test_prelims2(Parts),
+  ( catch(load_files(CwFile,[]),_,fail) -> test_prelims2(Parts),
                                      test_parts2(Parts)
   ; otherwise -> am_error(nofile(CwFile)),told,halt
   ).
 
 qtest :-
   test_prelims1(CwFile,Parts),
-  ( catch(consult(CwFile),_,fail) -> test_prelims2(Parts),
+  ( catch(load_files(CwFile,[]),_,fail) -> test_prelims2(Parts),
                                      qtest_parts2(Parts)
   ; otherwise -> am_error(nofile(CwFile)),told,halt
   ).
@@ -62,7 +67,7 @@ test_prelims1(CwFile,Parts) :-
   automarkrc(LabFile,CwFile,_,TestFile,Parts),
   % we assume we're in the student's sub-directory
   ( LabFile = '' -> true
-  ; use_module(local_library(LabFile))
+  ; use_module(local_library(LabFile)), assignment1:set_switch(headless, true)
   ),
   ( TestFile = '' -> true
   ; consult(local_root(TestFile))

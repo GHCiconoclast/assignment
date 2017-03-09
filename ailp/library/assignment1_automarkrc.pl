@@ -3,10 +3,18 @@
    search_bounds/2,
    automarkrc/5,
    cn2sp/2,
+   answerQ1/1,
+   answerQ2a/1,
+   answerQ2b/1,
+   %q2b/1,
+   answerQ3/1,
    answerQ4a/2,
    answerQ4b/2,
    answerQ4c/2,
-   answerQ4d/2
+   answerQ4d/2,
+   answerQ5_corner_move/1,
+   answerQ5_corner_move2/2,
+   answerQ6/2
   ]).
 
 switch(self_assessment,off).
