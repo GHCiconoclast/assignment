@@ -35,8 +35,8 @@ automarkrc(
    ,part(q4b,2,[check((candidate_number(CN),cn2sp(CN,SP))->q4b(-Q4b)->[_]/(answerQ4b(SP,X4b),X4b=Q4b))])
    ,part(q4c,2,[check((candidate_number(CN),cn2sp(CN,SP))->q4c(-Q4c)->[_]/(answerQ4c(SP,X4c),X4c=Q4c))])
    ,part(q4d,2,[check((candidate_number(CN),cn2sp(CN,SP))->q4d(-Q4d)->[_]/(answerQ4d(SP,X4d),X4d=Q4d))])
-   ,part(q5a,3,[skip((true->true->true))])
-   ,part(q5b,3,[skip((true->true->true))])
+   ,part(q5a,3,[check(((clause(q5_corner_move,B),am_writes(clause((q5_corner_move:-B))),nl)->q5_corner_move->true))])
+   ,part(q5b,3,[check(((clause(q5_corner_move2,B),am_writes(clause((q5_corner_move2:-B))),nl)->q5_corner_move2->true))])
    ,part(q6,5,[list(true->q6_spiral(L)->true)])
    ,part(extra,2,[])
    ]
