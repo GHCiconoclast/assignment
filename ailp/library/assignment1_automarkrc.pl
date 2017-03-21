@@ -13,7 +13,7 @@
    answerQ4c/2,
    answerQ4d/2,
    answerQ5_corner_move/1,
-   answerQ5_corner_move2/2,
+   answerQ5_corner_move2/1,
    answerQ6/2
   ]).
 
