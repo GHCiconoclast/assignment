@@ -24,6 +24,7 @@
     say/1,
     %%% assignment part %%%
     part/1,
+    part_module/1,
     %%% moved from oscar.pl file %%%
     shell/0,                   % interactive shell for the grid world
     %%% re-exported from command_channel.pl %%%
@@ -52,10 +53,12 @@
 :- dynamic
    ailp_internal/1,
    ailp_internal_thing/2,
-   part/1.
+   part/1,
+   part_module/1.
 
 % Define part of the assignment
 part(1).
+part_module(1).
 
 %%%%%%%%%% map predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Part 1 & 3 + 4

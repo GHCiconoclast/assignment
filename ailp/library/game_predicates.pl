@@ -30,7 +30,11 @@
   dynamic_thread/1.
 
 %%% These parameters can be changed %%%
-max_players(10).
+max_players(X) :-
+  ( part_module(4)    -> X = 11  % 10
+  ; part_module(test) -> X = 11  % 10
+  ; otherwise         -> X = 2  % 1
+  ).
 internal_grid_size(20).  % may be changed in testing
 
 %%% Control dynamic movement of Things, Charging Stations, Oracles here:
@@ -40,9 +44,39 @@ internal_grid_size(20).  % may be changed in testing
 % where N indicates the number of objects that move
 % and Dirs subset [n,e,s,w] gives the possible directions
 
-%dynamic_params( [0,[]], [0,[]], [0,[]], 100 ).  % no movement
-dynamic_params([10,[n,e,s,w]], [0,[]], [0,[]], 20).  % 10 things move every 20 seconds in all directions
-%dynamic_params( [40,[n,s]], [2,[w,e]], [2,[n,s,w,e]], 20 ).  % a lot more movement
+dynamic_params(Th, Ch, Or, T) :-
+  ( part_module(4)   -> (Th=[10,[n,e,s,w]], Ch=[0,[]], Or=[0,[]], T=20)  % 10 things move every 20 seconds in all directions
+  ; part_module(test)-> (Th=[40,[n,s]], Ch=[2,[w,e]], Or=[2,[n,s,w,e]], T=20)  % a lot more movement
+  ; otherwise -> (Th=[0,[]], Ch=[0,[]], Or=[0,[]], T=100)  % no movement -- Part 1, 2, 3
+  ).
+
+get_num(oracle, X) :-
+  internal_grid_size(N),
+  ( part_module(1)    -> X = 1
+  ; part_module(2)    -> X = 1
+  ; part_module(3)    -> X = 10
+  ; part_module(4)    -> X = N/2
+  ; part_module(test) -> X = N/2
+  ; otherwise -> fail
+  ).
+get_num(charging_station, X) :-
+  internal_grid_size(N),
+  ( part_module(1)    -> X = 4
+  ; part_module(2)    -> X = 4
+  ; part_module(3)    -> X = 2
+  ; part_module(4)    -> X = N/10
+  ; part_module(test) -> X = N/10
+  ; otherwise -> fail
+  ).
+get_num(thing, X) :-
+  internal_grid_size(N),
+  ( part_module(1)    -> X = 80
+  ; part_module(2)    -> X = 80
+  ; part_module(3)    -> random(85, 101, X)
+  ; part_module(4)    -> X = N*N/4
+  ; part_module(test) -> X = N*N/4
+  ; otherwise -> fail
+  ).
 
 %%% End of changeable parameters %%%
 
@@ -54,7 +88,9 @@ drawable_agent(A , DrawableA) :-
   random_member(C, [purple, blue, beige, white, gray, pink]),!,
   random_member(Cpath, [purple, blue, beige, white, gray, pink]),!,
   assert(ailp_internal(agent_colour_path(A, Cpath))),
-  random_free_pos(p(X,Y)),
+  ( part_module(1) -> X=1, Y=1
+  ; otherwise      -> random_free_pos(p(X,Y))
+  ),
   assert(ailp_internal(agent_position(A, p(X,Y)))),
   internal_topup(Emax),
   assert(ailp_internal(agent_energy(A, Emax))),
@@ -214,9 +250,12 @@ ailp_reset :-
   findall(A, (ailp_internal(agent_energy(A,_))), Agents),
   retractall(ailp_internal(_)),
   retractall(my_agent(_)),
-  init_things(oracle,N/2),
-  init_things(charging_station,N/10),
-  init_things(thing,N*N/4),
+  get_num(charging_station, NC),
+  init_things(charging_station,NC),
+  get_num(oracle, NO),
+  init_things(oracle,NO),
+  get_num(thing, NT),
+  init_things(thing,NT),
   wp:init_identity,  % defined in wp.pl
   maplist( drawable_agent, Agents, DrawableAgents),
   append( DrawableAgents, [[dyna, 0,red, 1,1]], AllAgents), % adds a dummy agent to use in do_command predicate
@@ -321,6 +360,15 @@ internal_colour_map :-
   fail.
 internal_colour_map.
 
+init_things(Label,_) :-
+  part_module(1),!,
+  ( Label=oracle           -> S=[164]
+  ; Label=charging_station -> S=[720,1529,659,8]
+  ; Label=thing            -> S=[2,6,10,11,12,15,16,17,81,85,86,88,93,94,165,171,172,173,241,242,244,247,257,258,320,322,324,328,329,331,401,402,405,406,409,413,414,416,482,498,560,563,566,573,575,644,645,657,727,807,813,818,880,886,890,898,961,972,978,1041,1043,1044,1047,1059,1128,1135,1139,1204,1206,1207,1214,1217,1287,1292,1298,1364,1374,1378,1443,1445,1446,1449,1521,1525,1530,1532,1534,1537]
+  ; otherwise              -> S=[], fail
+  ),
+  internal_grid_size(N),
+  internal_things(S,N,Label,1).
 init_things(Label,Exp) :-
   K is ceiling(Exp),   % round up if Exp evaluates to a fraction
   KK = 99999,
