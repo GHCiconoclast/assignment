@@ -8,7 +8,6 @@
     ailp_start_position/1, % binds with starting position p(X,Y)
     ailp_show_complete/0,  %
     ailp_grid_size/1,      % -Size
-    headless/1,            % enable/disable visualisations
     %%% moved from assignment1.pl file %%%
     complete/1,
     new_pos/3,
@@ -17,16 +16,44 @@
     %%% re-exported from command_channel.pl %%%
     reset/0,
     start/0,
-    stop/0
+    stop/0,
+    % switches
+    get_switch/2,
+    toggle_switch/1
   ]
 ).
 
 :- use_module('../command_channel').
 :- set_homepage('mower.html').
 
-% If headless(true) disable all do_command predicates
-:- dynamic headless/1.
-headless(false).
+% switch
+:- dynamic switch/2.
+
+%opposite(on, off).
+%opposite(off, on).
+opposite(true, false).
+opposite(false, true).
+
+set_switch(S, V) :-
+  ( opposite(V, _) -> true
+  ; otherwise      -> writeln('Switch value not available'), fail
+  ),
+  retractall(switch(S,_)),
+  assert(switch(S,V)).
+
+get_switch(S, V) :-
+  switch(S, V).
+
+toggle_switch(S) :-
+  switch(S, V),
+  opposite(V, OV),
+  retractall(switch(S,_)),
+  assert(switch(S,OV)),
+  write('Switch set to: '), write(OV), write('\n').
+% switch
+
+% If switch(headless, true) disable all do_command predicates
+:- set_switch(headless, false).
 
 :- dynamic ailp_grid_size/1.
 ailp_grid_size(4).
@@ -41,7 +68,7 @@ ailp_grid_size(4).
 %                               // world in web page
 
 ailp_show_move(p(X0,Y0),p(X1,Y1)) :-
-  headless(H),
+  switch(headless, H),
   ( H -> true
   ; (do_command([mower, colour, X0, Y0, lighter]),
      do_command([mower, colour, X1, Y1, lighter]),
@@ -53,7 +80,7 @@ ailp_show_move(p(X0,Y0),p(X1,Y1)) :-
   % (indciated by 'fail= @true' in R)
 
 ailp_show_complete :-
-  headless(H),
+  switch(headless, H),
   ( H -> true
   ; do_command([mower, say, 'Finished!'], _R)
   ).
@@ -86,7 +113,7 @@ reset :-
       [mower, 6, royalblue, X,Y]
     ]
   ]),
-  headless(H),
+  switch(headless, H),
   ( H -> true
   ;      do_command([mower, colour, X,Y, lighter])
   ).
@@ -130,7 +157,7 @@ next(P,Ps,R) :-
   \+ memberchk(P1,Ps),
   ailp_show_move(P,P1),
   term_to_atom([P1|Ps],PsA),
-  headless(H),
+  switch(headless, H),
   ( H -> true
   ;      do_command([mower,console,PsA],_R)
   ),
