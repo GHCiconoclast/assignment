@@ -180,10 +180,9 @@ writes(A) :-
 callable(topup(S),(my_agent(Agent),query_world( agent_topup_energy, [Agent,S] )),agent(topup)) :- !.
 callable(energy,(my_agent(Agent),query_world( agent_current_energy, [Agent,E] )),both(current_energy(E))) :- !.
 callable(position,(my_agent(Agent),query_world( agent_current_position, [Agent,P] )),both(current_position(P))) :- !.
+callable(identity,find_identity(A),both(identity(A))) :- !.
 callable(ask(S,Q),(my_agent(Agent),query_world( agent_ask_oracle, [Agent,S,Q,A] )),A) :- !.
-callable(Task,user:solve_task(Task,Cost),[console(Task),shell(term(Cost))]):-
-  !,
-  task(Task).
+callable(Task,user:solve_task(Task,Cost),[console(Task),shell(term(Cost))]):- !, task(Task).
 
 task(go(_Pos)).
 task(find(_O)).  % oracle o(N) or charging station c(N)

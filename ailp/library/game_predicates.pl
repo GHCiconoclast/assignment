@@ -14,6 +14,7 @@
     agent_ask_oracle/4,
     agent_check_oracle/2,
     agent_do_moves/2,
+    internal_poss_step/4,
     internal_leave_game/1,
     internal_join_game/1,
     check_pos/2,
@@ -146,8 +147,8 @@ agent_current_energy(Agent, Energy) :-
   nonvar(Agent),
   var(Energy),
   ailp_internal(agent_energy(Agent,Energy)),
-  atomic_list_concat(['Current energy:',Energy],' ',A),
-  do_command([Agent,console,A]).
+  atomic_list_concat(['Current energy:',Energy],' ',A).
+  %do_command([Agent,console,A]).
 
 % agent_current_position(+Agent, -Pos)
 agent_current_position(Agent, Pos) :-

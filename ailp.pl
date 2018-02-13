@@ -109,18 +109,18 @@ get_assignment_details :-  % get assignment details
     % load files and set up dependencies
     ( Assignment_part=0  -> use_module(assignment_library(Assignment_library_name))
     ; Assignment_part=1 -> use_module(assignment_library('wp_library'), except([api_/1,agent_ask_oracle/4])),
-                           use_module(assignment_library(Assignment_library_name), [api_/1,part_module/1,shell/0,start/0,stop/0,query_world/2,possible_query/2,my_agent/1,leave_game/0,join_game/1,start_game/0,reset_game/0,map_adjacent/3,map_distance/3]),
+                           use_module(assignment_library(Assignment_library_name), [api_/1,part_module/1,shell/0,start/0,stop/0,query_world/2,possible_query/2,my_agent/1,leave_game/0,join_game/1,start_game/0,reset_game/0,map_adjacent/3,map_distance/3,say/2]),
                            find_submission('wp', WpSubmission),
                            load_files([assignment_root(WpSubmission)], [silent(true)])
     ; Assignment_part=2 -> use_module(assignment_library(Assignment_library_name), [agent_ask_oracle/4,api_/1,wp/1,wp/2,wt_link/2,actor/1,link/1,init_identity/0,test/0]),
                            retract(api_(_)), assertz(api_(2))
     ; Assignment_part=3 -> use_module(assignment_library('wp_library'), except([api_/1,agent_ask_oracle/4])),
-                           use_module(assignment_library(Assignment_library_name), [api_/1,part_module/1,shell/0,start/0,stop/0,query_world/2,possible_query/2,my_agent/1,leave_game/0,join_game/1,start_game/0,reset_game/0,map_adjacent/3,map_distance/3]),
+                           use_module(assignment_library(Assignment_library_name), [api_/1,part_module/1,shell/0,start/0,stop/0,query_world/2,possible_query/2,my_agent/1,leave_game/0,join_game/1,start_game/0,reset_game/0,map_adjacent/3,map_distance/3,say/2]),
                            find_submission('wp', WpSubmission),
                            load_files([assignment_root(WpSubmission)], [silent(true)]),
                            retract(part_module(1)), assertz(part_module(3))
     ; Assignment_part=4 -> use_module(assignment_library('wp_library'), except([api_/1,agent_ask_oracle/4])),
-                           use_module(assignment_library(Assignment_library_name), [api_/1,part_module/1,shell/0,start/0,stop/0,query_world/2,possible_query/2,my_agent/1,leave_game/0,join_game/1,start_game/0,reset_game/0,map_adjacent/3,map_distance/3]),
+                           use_module(assignment_library(Assignment_library_name), [api_/1,part_module/1,shell/0,start/0,stop/0,query_world/2,possible_query/2,my_agent/1,leave_game/0,join_game/1,start_game/0,reset_game/0,map_adjacent/3,map_distance/3,say/2]),
                            find_submission('wp', WpSubmission),
                            load_files([assignment_root(WpSubmission)], [silent(true)]),
                            retract(part_module(1)), assertz(part_module(4))
