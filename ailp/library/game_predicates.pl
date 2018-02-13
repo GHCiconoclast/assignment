@@ -156,19 +156,19 @@ agent_current_position(Agent, Pos) :-
   ailp_internal(agent_position(Agent,Pos)).
 
 % agent_topup_energy(+Agent, +OID)
-% Agent's position needs to be map_adjacent to charging station identified by OID
+% Agent's position needs to be map_adj to charging station identified by OID
 agent_topup_energy(Agent, OID) :-
   nonvar(Agent),
   nonvar(OID),
   agent_current_position(Agent,Pos),
-  map_adjacent(Pos, _AdjPos, OID),
+  map_adj(Pos, _AdjPos, OID),
   OID = c(_),
   retract(ailp_internal(agent_energy(Agent, _E))),
   internal_topup(Emax),
   assert(ailp_internal(agent_energy(Agent,Emax))).
 
 % agent_ask_oracle(+Agent, +OID, +Question, -Answer)
-% Agent's position needs to be map_adjacent to oracle identified by OID
+% Agent's position needs to be map_adj to oracle identified by OID
 % fails if oracle already visited by Agent
 agent_ask_oracle(Agent, OID, Question, Answer) :-
   nonvar(Agent),
@@ -183,7 +183,7 @@ agent_ask_oracle(Agent, OID, Question, Answer) :-
   Cost is ceiling(Emax/10),
   ailp_internal(agent_energy(Agent,Energy)),
   ( Energy>=Cost -> agent_current_position(Agent,Pos),
-                   map_adjacent(Pos, AdjPos, OID),
+                   map_adj(Pos, AdjPos, OID),
                    OID = o(_),
                    internal_object(OID, AdjPos, Options),
                    member( question(Q)/answer(A),Options),
@@ -213,7 +213,7 @@ agent_do_moves(Agent, [H|T]) :-
   agent_do_move(Agent, H),
   agent_do_moves(Agent,T).
 % agent_do_move(+Agent, +To)
-% Has constraint that To is map_adjacent to Agent's current position
+% Has constraint that To is map_adj to Agent's current position
 % Reduces energy by 1 if step is valid
 agent_do_move(Agent,To) :-
   nonvar(Agent),
@@ -221,9 +221,9 @@ agent_do_move(Agent,To) :-
   game_status(running),
   agent_current_energy(Agent, F),
   F>0,
-  %% check p(X,Y) if To is map_adjacent to current position and free
+  %% check p(X,Y) if To is map_adj to current position and free
   agent_current_position(Agent,Pos),
-  map_adjacent(Pos, To, Obj),
+  map_adj(Pos, To, Obj),
   Obj = empty,!,
   %% send move to server
   p(X,Y) = To,
@@ -419,7 +419,7 @@ move_objects(N, Os, Label, Colour, PossMoves) :-
   move_objects( N1, L, Label, Colour, PossMoves).
 move_object([I,Pos], Label, Colour, PossMoves) :-
   Fact =.. [Label,I,Pos],
-  map_adjacent_random(Pos, NewPos, PossMoves),
+  map_adj_random(Pos, NewPos, PossMoves),
   NewFact =.. [Label, I, NewPos],
   assert(ailp_internal(NewFact)),
   retract(ailp_internal(Fact)),
@@ -428,18 +428,18 @@ move_object([I,Pos], Label, Colour, PossMoves) :-
   do_command([dyna, colour, X0, Y0, green]),
   do_command([dyna, colour, X, Y, Colour]).
 
-%map_adjacent_random(+P, ?AdjPos, +PassMoves).
+%map_adj_random(+P, ?AdjPos, +PassMoves).
 % generates a position adjacent to P
-map_adjacent_random(P, AdjPos, PossMoves) :-
+map_adj_random(P, AdjPos, PossMoves) :-
   nonvar(P),
   random_member(M, PossMoves),
   compute_step(P,M,PossPos,1),
   ( check_pos(PossPos, empty) -> AdjPos = PossPos
   ; otherwise                 -> delete( PossMoves, M, PossMoves1),
-                                  map_adjacent_random(P, AdjPos, PossMoves1)
+                                  map_adj_random(P, AdjPos, PossMoves1)
   ).
 
-map_adjacent(Pos, AdjPos, OID) :-
+map_adj(Pos, AdjPos, OID) :-
   nonvar(Pos),
   internal_poss_step(Pos, _M, AdjPos, 1),
   check_pos(AdjPos, OID).
