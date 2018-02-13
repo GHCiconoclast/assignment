@@ -5,7 +5,7 @@
 
 :- module(wp,
   [ agent_ask_oracle/4,  % Re-exported form oscar_library.pl
-    part/1,              % Re-exported form oscar_library.pl
+    api_/1,              % Re-exported form oscar_library.pl
     wp/1,
     wp/2,
     wt_link/2,
@@ -16,7 +16,7 @@
   ]
 ).
 
-:- use_module(oscar_library, [agent_ask_oracle/4, part/1]).
+:- use_module(oscar_library, [agent_ask_oracle/4, api_/1]).
 :- use_module(library(http/http_open)).
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).

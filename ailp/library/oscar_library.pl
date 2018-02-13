@@ -23,7 +23,7 @@
     %%% oscar_message %%%
     say/1,
     %%% assignment part %%%
-    part/1,
+    api_/1,
     part_module/1,
     %%% moved from oscar.pl file %%%
     shell/0,                   % interactive shell for the grid world
@@ -53,11 +53,11 @@
 :- dynamic
    ailp_internal/1,
    ailp_internal_thing/2,
-   part/1,
+   api_/1,
    part_module/1.
 
 % Define part of the assignment
-part(1).
+api_(1).
 part_module(1).
 
 %%%%%%%%%% map predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -67,7 +67,7 @@ part_module(1).
 map_adjacent(Pos, AdjPos, OID) :-
   nonvar(Pos),
   internal_poss_step(Pos, _M, AdjPos, 1),
-  ( part(4)   -> query_world( check_pos, [AdjPos, OID])
+  ( api_(4)   -> query_world( check_pos, [AdjPos, OID])
   ; otherwise -> ( internal_off_board(AdjPos) -> fail
                  ; internal_object1(O,AdjPos,_) -> OID = O
                  ; otherwise -> OID = empty
@@ -113,7 +113,7 @@ agent_current_energy(Agent, Energy) :-
   nonvar(Agent),
   var(Energy),
   ailp_internal(agent_energy(Agent,Energy)),
-  ( part(3)   -> atomic_list_concat(['Current energy:',Energy],' ',A),
+  ( api_(3)   -> atomic_list_concat(['Current energy:',Energy],' ',A),
                  do_command([Agent,console,A])
   ; otherwise -> true
   ).
@@ -142,12 +142,12 @@ agent_topup_energy(Agent, OID) :-
 agent_ask_oracle(Agent, OID, Question, Answer) :-
   nonvar(Agent),
   nonvar(OID),
-  ( part(3)   -> \+ ailp_internal(agent_visited_oracle(oscar, OID))
+  ( api_(3)   -> \+ ailp_internal(agent_visited_oracle(oscar, OID))
   ; otherwise -> true
   ),
   nonvar(Question),
   var(Answer),
-  ( part(3)   -> internal_topup(Emax),
+  ( api_(3)   -> internal_topup(Emax),
                  Cost is ceiling(Emax/10),
                  ailp_internal(agent_energy(Agent,Energy)),
                  ( Energy>=Cost -> agent_current_position(Agent,Pos),
@@ -162,9 +162,9 @@ agent_ask_oracle(Agent, OID, Question, Answer) :-
                  ; otherwise -> Answer='Sorry, not enough energy',AA=Answer
                  ),
                  do_command([Agent,console,AA])
-  ; otherwise -> ( part(1) -> (agent_current_position(Agent,Pos), map_adjacent(Pos, AdjPos, OID))
-                 ; part(2) -> true  % ignore agent position for testing
-                 ; otherwise -> (write('Unknown part: *'), part(P), write(P), write('*'), nl)
+  ; otherwise -> ( api_(1) -> (agent_current_position(Agent,Pos), map_adjacent(Pos, AdjPos, OID))
+                 ; api_(2) -> true  % ignore agent position for testing
+                 ; otherwise -> (write('Unknown part: *'), api_(P), write(P), write('*'), nl)
                  ),
                  OID = o(_),
                  internal_object(OID, AdjPos, Options),
@@ -183,7 +183,7 @@ ailp_reset :-
   assert(ailp_internal(agent_position(oscar, p(X0,Y0)))),
   internal_topup(Emax),
   assert(ailp_internal(agent_energy(oscar, Emax))),
-  ( part(3)   -> init_things(oracle,N/2),
+  ( api_(3)   -> init_things(oracle,N/2),
                  init_things(charging_station,N/10),
                  init_things(thing,N*N/4),
                  wp:init_identity  % defined in wp.pl
@@ -196,7 +196,7 @@ ailp_reset :-
     ],
     agents=[[oscar, 6, blue, X0,Y0]]
   ]),
-  ( part(3)   -> internal_colour_map  % make objects visible at the start
+  ( api_(3)   -> internal_colour_map  % make objects visible at the start
   ; otherwise -> true
   ),
   do_command([oscar, colour, X0, Y0, yellow]).
@@ -206,7 +206,7 @@ internal_grid_size(20).  % may be changed in testing
 
 internal_topup(Emax):-
   internal_grid_size(N),
-  ( part(3)   -> Emax is ceiling(N*N/4)
+  ( api_(3)   -> Emax is ceiling(N*N/4)
   ; otherwise -> Emax is N*N/5
   ).
 
@@ -239,43 +239,43 @@ internal_use_energy(Agent, Cost) :-
 %%%%%%%%%% Objects on the map %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% WP version -- used only for Part 2 of the assignment
 internal_object(o(1), p(5,3), [question(link)/answer(Link)]) :-
-  part(2),
+  api_(2),
   wp:ailp_identity(A),
   wp:random_link(A,Link).
 %%% Part 1 version
 %%% The position and number of these objects may change when testing
 % Charging stations
-internal_object(c(1), p(1,10), []) :- part(1).
-internal_object(c(2), p(10,20), []) :- part(1).
-internal_object(c(3), p(20,9), []) :- part(1).
-internal_object(c(4), p(9,1), []) :- part(1).
+internal_object(c(1), p(1,10), []) :- api_(1).
+internal_object(c(2), p(10,20), []) :- api_(1).
+internal_object(c(3), p(20,9), []) :- api_(1).
+internal_object(c(4), p(9,1), []) :- api_(1).
 % Oracles that have information
-internal_object(o(1), p(5,3), [question(_)/answer(42)]) :- part(1).
+internal_object(o(1), p(5,3), [question(_)/answer(42)]) :- api_(1).
 % Obstacles (things)
 internal_object(t(I), Pos, []) :-
-  part(1),
+  api_(1),
   ailp_internal_thing(I,Pos).
 %%% Part 3 version
 %%% The position and number of these objects changes every time ailp_reset/0 is called
 internal_object(c(I),Pos,[]) :-
-  part(3),
+  api_(3),
   ailp_internal(charging_station(I,Pos)).
 %% Oracles that have information
 internal_object(o(I),Pos,[question(link)/answer(Link)]):-
-  part(3),
+  api_(3),
   ailp_internal(oracle(I,Pos)),
   wp:ailp_identity(A),
   wp:random_link(A,Link).
 %% Obstacles (things)
 internal_object(t(I),Pos,[]):-
-  part(3),
+  api_(3),
   ailp_internal(thing(I,Pos)).
 %%% Multi version end
 
 % version that makes the object visible on the map
 internal_object1(O,Loc,L):-
   internal_object(O,Loc,L),
-  ( part(3)   -> true
+  ( api_(3)   -> true
                  %internal_colour_loc(O,Loc)  % disabled as may cause web client overload
   ; otherwise -> Loc=p(X,Y),
                  ( O=t(_) -> Colour=black   % obstacle
@@ -519,18 +519,18 @@ shell :-
 
 %%% Part 1 & 3 + Part 4
 handle_input(Input) :-
-  ( Input = setup       -> ( part(4)   -> join_game(_A),handle_input(reset)
+  ( Input = setup       -> ( api_(4)   -> join_game(_A),handle_input(reset)
                            ; otherwise -> show_response('This command works only with Part 4.'),shell
                            )
-  ; Input = status      -> ( part(4)   -> query_world(game_status,[S]),show_response(S),shell
-                           ; otherwise -> show_response('This command works only with Part 4.'),shell
-                           )
-
-  ; Input = whoami      -> ( part(4)   -> my_agent(A),show_response(A),shell
+  ; Input = status      -> ( api_(4)   -> query_world(game_status,[S]),show_response(S),shell
                            ; otherwise -> show_response('This command works only with Part 4.'),shell
                            )
 
-  ; Input = reset       -> ( part(4)   -> reset_game,start_game,shell
+  ; Input = whoami      -> ( api_(4)   -> my_agent(A),show_response(A),shell
+                           ; otherwise -> show_response('This command works only with Part 4.'),shell
+                           )
+
+  ; Input = reset       -> ( api_(4)   -> reset_game,start_game,shell
                            ; otherwise -> ailp_reset,shell
                            )
   ; Input = stop        -> true
@@ -547,7 +547,7 @@ get_input(Input) :-
 % show answer to user
 %%% Part 1 & 3 + Part 4
 show_response(R) :-
-  ( part(4)   -> my_agent(Agent)
+  ( api_(4)   -> my_agent(Agent)
   ; otherwise -> Agent = oscar
   ),
   ( R=shell(Response)   -> writes('! '),writes(Response),writes(nl)
@@ -570,22 +570,22 @@ writes(A) :-
 
 % callable(+Command, +Goal, ?Response)
 %%% Part 1 & 3
-callable(call(G),call(G),G) :- (part(1); part(3)), !.
-callable(topup(S),agent_topup_energy(oscar,S),agent(topup)) :- (part(1); part(3)), !.
-callable(energy,agent_current_energy(oscar,E),both(current_energy(E))) :- (part(1); part(3)), !.
-callable(position,agent_current_position(oscar,P),both(current_position(P))) :- (part(1); part(3)), !.
-callable(ask(S,Q),agent_ask_oracle(oscar,S,Q,A),A) :- (part(1); part(3)), !.
+callable(call(G),call(G),G) :- (api_(1); api_(3)), !.
+callable(topup(S),agent_topup_energy(oscar,S),agent(topup)) :- (api_(1); api_(3)), !.
+callable(energy,agent_current_energy(oscar,E),both(current_energy(E))) :- (api_(1); api_(3)), !.
+callable(position,agent_current_position(oscar,P),both(current_position(P))) :- (api_(1); api_(3)), !.
+callable(ask(S,Q),agent_ask_oracle(oscar,S,Q,A),A) :- (api_(1); api_(3)), !.
 callable(Task,user:solve_task(Task,Cost),[console(Task),shell(term(Cost))]) :-
-  (part(1); part(3)), !,
+  (api_(1); api_(3)), !,
   task(Task).
 %%% Part 1 & 3 (End)
 %%% Part 4
-callable(topup(S),(my_agent(Agent),query_world( agent_topup_energy, [Agent,S] )),agent(topup)) :- part(4), !.
-callable(energy,(my_agent(Agent),query_world( agent_current_energy, [Agent,E] )),both(current_energy(E))) :- part(4), !.
-callable(position,(my_agent(Agent),query_world( agent_current_position, [Agent,P] )),both(current_position(P))) :- part(4), !.
-callable(ask(S,Q),(my_agent(Agent),query_world( agent_ask_oracle, [Agent,S,Q,A] )),A) :- part(4), !.
+callable(topup(S),(my_agent(Agent),query_world( agent_topup_energy, [Agent,S] )),agent(topup)) :- api_(4), !.
+callable(energy,(my_agent(Agent),query_world( agent_current_energy, [Agent,E] )),both(current_energy(E))) :- api_(4), !.
+callable(position,(my_agent(Agent),query_world( agent_current_position, [Agent,P] )),both(current_position(P))) :- api_(4), !.
+callable(ask(S,Q),(my_agent(Agent),query_world( agent_ask_oracle, [Agent,S,Q,A] )),A) :- api_(4), !.
 callable(Task,user:solve_task(Task,Cost),[console(Task),shell(term(Cost))]):-
-  part(4), !,
+  api_(4), !,
   task(Task).
 %%% Part 4 (End)
 
