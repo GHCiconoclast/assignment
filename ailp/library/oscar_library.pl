@@ -535,14 +535,16 @@ handle_input(Input) :-
                            )
   ; Input = stop        -> true
   ; Input = [H|T]       -> handle_input(H),handle_input(T),shell
-  ; callable(Input,G,R) -> ( call(G) -> show_response(R) ; show_response('This failed.') ),shell
+  ; callable(Input,G,R) -> ( show_response(G),call(G) -> show_response(R) ; show_response('This failed.') ),shell
   ; otherwise           -> show_response('Unknown command, please try again.'),shell
   ).
 %%% Part 1 & 3 + Part 4 (End)
 
 % get input from user
 get_input(Input) :-
-  write('? '),read(Input).
+  prompt(_,'? '),
+  %write('? '),flush_output,
+  read(Input).
 
 % show answer to user
 %%% Part 1 & 3 + Part 4
