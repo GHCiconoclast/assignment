@@ -170,6 +170,7 @@ link('The Big Lebowski').
 %link('The New York Times').
 link('Tony Award').
 link('Los Angeles').
+link('Angelina Jolie').
 
 random_actor(A) :-
   findall(A,actor(A),L),
@@ -177,8 +178,19 @@ random_actor(A) :-
 
 random_link(A,L) :-
   actor(A),
-  findall(L,(link(L),wp(A,WT),wt_link(WT,L)),Ls),
+  actor_links(A,Ls),
   random_member(L,Ls).
+  
+actor_links(A,Ls):-
+  actor(A),
+  setof(L,(link(L),wp(A,WT),wt_link(WT,L)),Ls).
+
+subset_links(A1,A2):-
+  actor_links(A1,Ls1),
+  actor_links(A2,Ls2),
+  A1 \= A2,
+  forall(member(L,Ls1),member(L,Ls2)).
+  
 
 %%%%%%%%%% Testing %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 :- dynamic ailp_identity/1.
