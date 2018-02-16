@@ -120,8 +120,9 @@ get_assignment_details :-  % get assignment details
                                                                                     init_identity/0,test/0]
                                      ),
                            use_module(assignment_library('oscar_library'), [api_/1,part_module/1]),
-                           use_module(assignment_library('game_predicates'), [ailp_reset/0,agent_ask_oracle/4]),
-                           retract(part_module(1)), assertz(part_module(2))
+                           use_module(assignment_library('game_predicates'), [agent_ask_oracle/4]),
+                           retract(part_module(1)), assertz(part_module(2)),
+                           game_predicates:ailp_reset
     ; Assignment_part=3 -> use_module(assignment_library('wp_library')),
                            use_module(assignment_library(Assignment_library_name), [api_/1,part_module/1,shell/0,start/0,stop/0,
                                                                                     query_world/2,possible_query/2,my_agent/1,

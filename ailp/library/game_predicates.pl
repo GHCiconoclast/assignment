@@ -20,7 +20,9 @@
     check_pos/2,
     game_status/1,
     internal_start_game/0,
-    ailp_reset/0
+    ailp_reset/0,
+    map_adjacent/3,
+    map_distance/3
   ]
 ).
 
@@ -81,6 +83,21 @@ get_num(thing, X) :-
 
 %%% End of changeable parameters %%%
 
+%%%%%%%%%% map predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% map_adjacent(+Pos, ?AdjPos, ?Occ)
+% Occ = empty / c(42) / o(37) - charging station / oracle and ids
+map_adjacent(Pos, AdjPos, OID) :-
+  nonvar(Pos),
+  internal_poss_step(Pos, _M, AdjPos, 1),
+  ( api_(4)   -> query_world( check_pos, [AdjPos, OID])
+  ; otherwise -> (write('Unknown API: *'), api_(P), write(P), write('*'), nl)
+  ).
+
+% map_distance(+Pos1, +Pos2, ?Distance)
+% Manhattan distance between two grid squares
+map_distance(p(X,Y),p(X1,Y1), D) :-
+  D is abs(X - X1) + abs(Y - Y1).
+%%%%%%%%%% map predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % assign drawable features to the agent
 % DrawableA has format [AgentId, Shape(n sides), Colour, initialX, initialY]

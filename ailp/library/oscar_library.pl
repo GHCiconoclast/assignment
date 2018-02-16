@@ -4,15 +4,16 @@
  */
 
 :- module(oscar_library,
-  [ %%% map predicates %%%
+  [ %%% map predicates %%% re-exported from game_predicates %%%
     map_adjacent/3,           % ?-map_adjacent(p(1,5),A,O).
     map_distance/3,           % ?-map_distance(p(1,5),p(2,3),D).
+    %%% oscar predicates %%%
     say/2,
     %%% assignment part %%%
     api_/1,
     part_module/1,
     %%% moved from oscar.pl file %%%
-    shell/0,                   % interactive shell for the grid world
+    shell/0,                  % interactive shell for the grid world
     %%% re-exported from command_channel.pl %%%
     start/0,
     stop/0,
@@ -28,34 +29,18 @@
 ).
 
 :- use_module(library(http/http_client), [http_post/4]).
-:- use_module(game_predicates, [internal_poss_step/4]).
+:- use_module(game_predicates, [map_adjacent/3,map_distance/3]).
 :- use_module('../command_channel.pl').
 :- set_homepage('oscar.html').
 
 :- dynamic
-   ailp_internal/1,
-   ailp_internal_thing/2,
    api_/1,
-   part_module/1.
+   part_module/1,
+   ailp_internal/1.
 
 % Define part of the assignment
 api_(4).
 part_module(1).
-
-%%%%%%%%%% map predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% map_adjacent(+Pos, ?AdjPos, ?Occ)
-% Occ = empty / c(42) / o(37) - charging station / oracle and ids
-map_adjacent(Pos, AdjPos, OID) :-
-  nonvar(Pos),
-  internal_poss_step(Pos, _M, AdjPos, 1),
-  ( api_(4)   -> query_world( check_pos, [AdjPos, OID])
-  ; otherwise -> (write('Unknown API: *'), api_(P), write(P), write('*'), nl)
-  ).
-
-% map_distance(+Pos1, +Pos2, ?Distance)
-% Manhattan distance between two grid squares
-map_distance(p(X,Y),p(X1,Y1), D) :-
-  D is abs(X - X1) + abs(Y - Y1).
 
 /*
  *  API 4
