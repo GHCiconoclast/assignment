@@ -139,13 +139,9 @@ shell :-
   ).
 
 handle_input(Input) :-
-  ( Input = setup       -> join_game(_A),handle_input(reset)
-  ; Input = status      -> query_world(game_status,[S]),show_response(S),shell
-  ; Input = whoami      -> my_agent(A),show_response(A),shell
-  ; Input = reset       -> reset_game,start_game,shell
-  ; Input = stop        -> true
+  ( Input = stop        -> true
   ; Input = [H|T]       -> handle_input(H),handle_input(T),shell
-  ; callable(Input,G,R) -> ( show_response(G),call(G) -> show_response(R) ; show_response('This failed.') ),shell
+  ; shell2query(Input,G,R) -> ( show_response(query(G)),call(G) -> show_response(R) ; show_response('This failed.') ),shell
   ; otherwise           -> show_response('Unknown command, please try again.'),shell
   ).
 
@@ -156,13 +152,11 @@ get_input(Input) :-
 
 % show answer to user
 show_response(R) :-
-  ( api_(4)   -> my_agent(Agent)
-  ; otherwise -> Agent = oscar
-  ),
   ( R=shell(Response)   -> writes('! '),writes(Response),writes(nl)
-  ; R=console(Response) -> term_to_atom(Response,A),do_command([Agent,console,A])
+  ; R=query(Response)   -> writes(': '),writes(Response),writes(nl)
+  ; R=console(Response) -> my_agent(Agent),term_to_atom(Response,A),do_command([Agent,console,A])
   ; R=both(Response)    -> show_response(shell(Response)),show_response(console(Response))
-  ; R=agent(Response)   -> term_to_atom(Response,A),do_command([Agent,say,A])
+  ; R=agent(Response)   -> my_agent(Agent),term_to_atom(Response,A),do_command([Agent,say,A])
   ; R=[H|T]             -> show_response(H),show_response(T)
   ; R=[]                -> true
   ; otherwise           -> writes(['! ',R])
@@ -176,13 +170,18 @@ writes(A) :-
   ; otherwise -> write(A)
   ).
 
-% callable(+Command, +Goal, ?Response)
-callable(topup(S),(my_agent(Agent),query_world( agent_topup_energy, [Agent,S] )),agent(topup)) :- !.
-callable(energy,(my_agent(Agent),query_world( agent_current_energy, [Agent,E] )),both(current_energy(E))) :- !.
-callable(position,(my_agent(Agent),query_world( agent_current_position, [Agent,P] )),both(current_position(P))) :- !.
-callable(identity,find_identity(A),both(identity(A))) :- !.
-callable(ask(S,Q),(my_agent(Agent),query_world( agent_ask_oracle, [Agent,S,Q,A] )),A) :- !.
-callable(Task,user:solve_task(Task,Cost),[console(Task),shell(term(Cost))]):- !, task(Task).
+% shell2query(+Command, +Goal, ?Response)
+shell2query(setup,(join_game(_A),reset_game,start_game),ok).
+shell2query(status,query_world(game_status,[S]),game_status(S)).
+shell2query(whoami,my_agent(A),my_agent(A)).
+shell2query(reset,(reset_game,start_game),ok).
+shell2query(topup(S),(my_agent(Agent),query_world( agent_topup_energy, [Agent,S] )),agent(topup)).
+shell2query(energy,(my_agent(Agent),query_world( agent_current_energy, [Agent,E] )),both(current_energy(E))).
+shell2query(position,(my_agent(Agent),query_world( agent_current_position, [Agent,P] )),both(current_position(P))).
+shell2query(identity,find_identity(A),both(identity(A))).
+shell2query(ask(S,Q),(my_agent(Agent),query_world( agent_ask_oracle, [Agent,S,Q,A] )),A).
+shell2query(Task,user:solve_task(Task,Cost),[console(Task),shell(term(Cost))]):-task(Task).
+shell2query(call(G),findall(G,call(G),L),L).
 
 task(go(_Pos)).
 task(find(_O)).  % oracle o(N) or charging station c(N)

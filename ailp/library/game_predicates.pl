@@ -147,7 +147,7 @@ agent_current_energy(Agent, Energy) :-
   nonvar(Agent),
   var(Energy),
   ailp_internal(agent_energy(Agent,Energy)),
-  atomic_list_concat(['Current energy:',Energy],' ',A).
+  atomic_list_concat(['Current energy:',Energy],' ',_A).
   %do_command([Agent,console,A]).
 
 % agent_current_position(+Agent, -Pos)
@@ -188,7 +188,7 @@ agent_ask_oracle(Agent, OID, Question, Answer) :-
                    OID = o(_),
                    internal_object(OID, AdjPos, Options),
                    member( question(Q)/answer(A),Options),
-                   ( Question=Q -> Answer=A ; Answer='I do not know' ),
+                   ( Question=Q -> Answer=A ; Answer='42' ),
                    atomic_list_concat( [Question,Answer],': ',AA),
                    internal_use_energy( Agent,Cost),
                    assert( ailp_internal(agent_visited_oracle(Agent, OID)))
