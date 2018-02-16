@@ -90,6 +90,7 @@ drawable_agent(A , DrawableA) :-
   random_member(Cpath, [purple, blue, beige, white, gray, pink]),!,
   assert(ailp_internal(agent_colour_path(A, Cpath))),
   ( part_module(1) -> X=1, Y=1
+  ; part_module(2) -> X=1, Y=1
   ; otherwise      -> random_free_pos(p(X,Y))
   ),
   assert(ailp_internal(agent_position(A, p(X,Y)))),
@@ -174,27 +175,34 @@ agent_topup_energy(Agent, OID) :-
 agent_ask_oracle(Agent, OID, Question, Answer) :-
   nonvar(Agent),
   nonvar(OID),
-  ( game_status(running) -> true
-  ; otherwise            -> do_command([Agent, console, 'start the game first']), fail
+  ( part_module(2) -> true
+  ; otherwise      -> ( game_status(running) -> true
+                      ; otherwise            -> do_command([Agent, console, 'start the game first']), fail
+                      ),
+                      \+ ailp_internal(agent_visited_oracle(Agent, OID))
   ),
-  \+ ailp_internal(agent_visited_oracle(Agent, OID)),
   nonvar(Question),
   var(Answer),
-  internal_topup(Emax),
-  Cost is ceiling(Emax/10),
-  ailp_internal(agent_energy(Agent,Energy)),
-  ( Energy>=Cost -> agent_current_position(Agent,Pos),
-                   map_adj(Pos, AdjPos, OID),
-                   OID = o(_),
-                   internal_object(OID, AdjPos, Options),
-                   member( question(Q)/answer(A),Options),
-                   ( Question=Q -> Answer=A ; Answer='42' ),
-                   atomic_list_concat( [Question,Answer],': ',AA),
-                   internal_use_energy( Agent,Cost),
-                   assert( ailp_internal(agent_visited_oracle(Agent, OID)))
-  ; otherwise -> Answer='Sorry, not enough energy',AA=Answer
-  ),
-  do_command([Agent,console,AA]).
+  ( part_module(2) -> OID = o(_),
+                      internal_object(OID, _AdjPos, Options),
+                      member(question(Q)/answer(A),Options),
+                      ( Question=Q -> Answer=A ; Answer='I do not know' )
+  ; otherwise      -> internal_topup(Emax),
+                      Cost is ceiling(Emax/10),
+                      ailp_internal(agent_energy(Agent,Energy)),
+                      ( Energy>=Cost -> agent_current_position(Agent,Pos),
+                                       map_adj(Pos, AdjPos, OID),
+                                       OID = o(_),
+                                       internal_object(OID, AdjPos, Options),
+                                       member( question(Q)/answer(A),Options),
+                                       ( Question=Q -> Answer=A ; Answer='42' ),
+                                       atomic_list_concat( [Question,Answer],': ',AA),
+                                       internal_use_energy( Agent,Cost),
+                                       assert( ailp_internal(agent_visited_oracle(Agent, OID)))
+                      ; otherwise -> Answer='Sorry, not enough energy',AA=Answer
+                      ),
+                      do_command([Agent,console,AA])
+  ).
 
 % agent_colour_path(+Agent, ?ColourPath)
 agent_colour_path(Agent, ColourPath) :-
@@ -260,15 +268,11 @@ ailp_reset :-
   wp:init_identity,  % defined in wp.pl
   maplist( drawable_agent, Agents, DrawableAgents),
   append( DrawableAgents, [[dyna, 0,red, 1,1]], AllAgents), % adds a dummy agent to use in do_command predicate
-  reset([
-    grid_size=N,
-    cells=[
-      [green, 1,1, N,N]
-    ],
-    agents = AllAgents
-  ]),
-  maplist( colour_agent_position, DrawableAgents),
-  internal_colour_map,  % make objects visible at the start
+  ( part_module(2) -> true
+  ; otherwise      -> reset([grid_size=N, cells=[[green,1,1,N,N]], agents=AllAgents]),
+                      maplist( colour_agent_position, DrawableAgents),
+                      internal_colour_map  % make objects visible at the start
+  ),
   assert(ailp_internal(game_status(ready))).
 
 colour_agent_position([A,_,_,X,Y]) :-
@@ -362,7 +366,7 @@ internal_colour_map :-
 internal_colour_map.
 
 init_things(Label,_) :-
-  part_module(1),!,
+  (part_module(1);part_module(2)),!,
   ( Label=oracle           -> S=[164]
   ; Label=charging_station -> S=[720,1529,659,8]
   ; Label=thing            -> S=[2,6,10,11,12,15,16,17,81,85,86,88,93,94,165,171,172,173,241,242,244,247,257,258,320,322,324,328,329,331,401,402,405,406,409,413,414,416,482,498,560,563,566,573,575,644,645,657,727,807,813,818,880,886,890,898,961,972,978,1041,1043,1044,1047,1059,1128,1135,1139,1204,1206,1207,1214,1217,1287,1292,1298,1364,1374,1378,1443,1445,1446,1449,1521,1525,1530,1532,1534,1537]

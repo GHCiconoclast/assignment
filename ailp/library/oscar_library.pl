@@ -57,15 +57,6 @@ map_adjacent(Pos, AdjPos, OID) :-
 map_distance(p(X,Y),p(X1,Y1), D) :-
   D is abs(X - X1) + abs(Y - Y1).
 
-
-%%%%%%%%%% Objects on the map %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% WP version -- used only for Part 2 of the assignment
-internal_object(o(1), p(5,3), [question(link)/answer(Link)]) :-
-  api_(2),
-  wp:ailp_identity(A),
-  wp:random_link(A,Link).
-
-
 /*
  *  API 4
  * Contains predicates which allow the communication between the agent/client and the server through http post requests.
