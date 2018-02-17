@@ -109,17 +109,22 @@ reset_game:-
  *  Moved from oscar.pl
  */
 %%%%%%%%%% command shell %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 shell :-
-  ( api_(4)   -> get_input(Input),handle_input(Input)
+  ( api_(4)   -> get_input(Input),( Input=stop -> true ; handle_input(Input),shell )
   ; otherwise -> show_response('Shell not available.')
   ).
 
 handle_input(Input) :-
-  ( Input = stop        -> true
-  ; Input = [H|T]       -> handle_input(H),handle_input(T),shell
-  ; shell2query(Input,G,R) -> ( show_response(query(G)),call(G) -> show_response(R) ; show_response('This failed.') ),shell
-  ; otherwise           -> show_response('Unknown command, please try again.'),shell
+  ( Input = help           -> forall(shell2query(S,Q,_R),(numbervars((S,Q)),writes([S,' -- ',Q])))
+  ; Input = demo           -> shell_demo(D),handle_input(D)
+  ; Input = [H|T]          -> writes(['? ',H]),handle_input(H),write('<return> to continue'),get_single_char(_),nl,handle_input(T)
+  ; Input = []             -> true
+  ; shell2query(Input,G,R) -> ( show_response(query(G)),call(G) -> show_response(R) ; show_response('This failed.') )
+  ; otherwise              -> show_response('Unknown command, please try again.')
   ).
+
+shell_demo([reset,find(o(1)),ask(o(1),'What is the meaning of life, the universe and everything?'),go(p(7,7)),energy,position,go(p(19,9)),energy,position,call(map_adjacent(p(19,9),_P,_O)),topup(c(3)),energy,go(p(10,10)),energy]).
 
 % get input from user
 get_input(Input) :-
@@ -128,8 +133,8 @@ get_input(Input) :-
 
 % show answer to user
 show_response(R) :-
-  ( R=shell(Response)   -> writes('! '),writes(Response),writes(nl)
-  ; R=query(Response)   -> writes(': '),writes(Response),writes(nl)
+  ( R=shell(Response)   -> writes(['! ',Response])
+  ; R=query(Response)   -> \+ \+ (numbervars(Response),writes([': ',Response]))
   ; R=console(Response) -> my_agent(Agent),term_to_atom(Response,A),do_command([Agent,console,A])
   ; R=both(Response)    -> show_response(shell(Response)),show_response(console(Response))
   ; R=agent(Response)   -> my_agent(Agent),term_to_atom(Response,A),do_command([Agent,say,A])
@@ -148,15 +153,15 @@ writes(A) :-
 
 % shell2query(+Command, +Goal, ?Response)
 shell2query(setup,(join_game(_A),reset_game,start_game),ok).
+shell2query(reset,(reset_game,start_game),ok).
 shell2query(status,query_world(game_status,[S]),game_status(S)).
 shell2query(whoami,my_agent(A),my_agent(A)).
-shell2query(reset,(reset_game,start_game),ok).
-shell2query(topup(S),(my_agent(Agent),query_world( agent_topup_energy, [Agent,S] )),agent(topup)).
-shell2query(energy,(my_agent(Agent),query_world( agent_current_energy, [Agent,E] )),both(current_energy(E))).
 shell2query(position,(my_agent(Agent),query_world( agent_current_position, [Agent,P] )),both(current_position(P))).
+shell2query(energy,(my_agent(Agent),query_world( agent_current_energy, [Agent,E] )),both(current_energy(E))).
+shell2query(topup(S),(my_agent(Agent),query_world( agent_topup_energy, [Agent,S] )),agent(topup)).
+shell2query(Task,user:solve_task(Task,Cost),[console(Task),shell(term(Cost))]):-task(Task).
 shell2query(identity,find_identity(A),both(identity(A))).
 shell2query(ask(S,Q),(my_agent(Agent),query_world( agent_ask_oracle, [Agent,S,Q,A] )),A).
-shell2query(Task,user:solve_task(Task,Cost),[console(Task),shell(term(Cost))]):-task(Task).
 shell2query(call(G),findall(G,call(G),L),L).
 
 task(go(_Pos)).
