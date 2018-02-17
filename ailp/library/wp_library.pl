@@ -4,9 +4,7 @@
  */
 
 :- module(wp,
-  [ agent_ask_oracle/4,  % Re-exported form oscar_library.pl
-    part/1,              % Re-exported form oscar_library.pl
-    wp/1,
+  [ wp/1,
     wp/2,
     wt_link/2,
     actor/1,
@@ -16,7 +14,6 @@
   ]
 ).
 
-:- use_module(oscar_library, [agent_ask_oracle/4, part/1]).
 :- use_module(library(http/http_open)).
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).
@@ -170,6 +167,7 @@ link('The Big Lebowski').
 %link('The New York Times').
 link('Tony Award').
 link('Los Angeles').
+link('Angelina Jolie').
 
 random_actor(A) :-
   findall(A,actor(A),L),
@@ -177,8 +175,19 @@ random_actor(A) :-
 
 random_link(A,L) :-
   actor(A),
-  findall(L,(link(L),wp(A,WT),wt_link(WT,L)),Ls),
+  actor_links(A,Ls),
   random_member(L,Ls).
+
+actor_links(A,Ls):-
+  actor(A),
+  setof(L,(link(L),wp(A,WT),wt_link(WT,L)),Ls).
+
+subset_links(A1,A2):-
+  actor_links(A1,Ls1),
+  actor_links(A2,Ls2),
+  A1 \= A2,
+  forall(member(L,Ls1),member(L,Ls2)).
+
 
 %%%%%%%%%% Testing %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 :- dynamic ailp_identity/1.

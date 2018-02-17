@@ -1,27 +1,11 @@
 candidate_number(12345).
 
-solve_task(Task,Cost) :-
-  ( part(1) -> solve_task_1_3(Task, Cost)
-  ; part(3) -> solve_task_1_3(Task, Cost)
-  ; part(4) -> solve_task_4(Task, Cost)
-  ).
-
-%%%%%%%%%% Part 1 & 3 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-solve_task_1_3(Task,Cost) :-
-  agent_current_position(oscar,P),
-  solve_task_bt(Task,[c(0,P),P],0,R,Cost,_NewPos),!,  % prune choice point for efficiency
-  reverse(R,[_Init|Path]),
-  agent_do_moves(oscar,Path).
-%%%%%%%%%% Part 1 & 3 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%% Part 4 (Optional) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-solve_task_4(Task,Cost):-
+solve_task(Task,Cost):-
   my_agent(Agent),
   query_world( agent_current_position, [Agent,P] ),
   solve_task_bt(Task,[c(0,P),P],0,R,Cost,_NewPos),!,  % prune choice point for efficiency
   reverse(R,[_Init|Path]),
   query_world( agent_do_moves, [Agent,Path] ).
-%%%%%%%%%% Part 4 (Optional) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 %%%%%%%%%% Useful predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% backtracking depth-first search, needs to be changed to agenda-based A*

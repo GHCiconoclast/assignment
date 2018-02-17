@@ -14,12 +14,15 @@
     agent_ask_oracle/4,
     agent_check_oracle/2,
     agent_do_moves/2,
+    internal_poss_step/4,
     internal_leave_game/1,
     internal_join_game/1,
     check_pos/2,
     game_status/1,
     internal_start_game/0,
-    ailp_reset/0
+    ailp_reset/0,
+    map_adjacent/3,
+    map_distance/3
   ]
 ).
 
@@ -30,7 +33,11 @@
   dynamic_thread/1.
 
 %%% These parameters can be changed %%%
-max_players(10).
+max_players(X) :-
+  ( part_module(4)    -> X = 11  % 10
+  ; part_module(test) -> X = 11  % 10
+  ; otherwise         -> X = 2  % 1
+  ).
 internal_grid_size(20).  % may be changed in testing
 
 %%% Control dynamic movement of Things, Charging Stations, Oracles here:
@@ -40,12 +47,57 @@ internal_grid_size(20).  % may be changed in testing
 % where N indicates the number of objects that move
 % and Dirs subset [n,e,s,w] gives the possible directions
 
-%dynamic_params( [0,[]], [0,[]], [0,[]], 100 ).  % no movement
-dynamic_params([10,[n,e,s,w]], [0,[]], [0,[]], 20).  % 10 things move every 20 seconds in all directions
-%dynamic_params( [40,[n,s]], [2,[w,e]], [2,[n,s,w,e]], 20 ).  % a lot more movement
+dynamic_params(Th, Ch, Or, T) :-
+  ( part_module(4)   -> (Th=[10,[n,e,s,w]], Ch=[0,[]], Or=[0,[]], T=20)  % 10 things move every 20 seconds in all directions
+  ; part_module(test)-> (Th=[40,[n,s]], Ch=[2,[w,e]], Or=[2,[n,s,w,e]], T=20)  % a lot more movement
+  ; otherwise -> (Th=[0,[]], Ch=[0,[]], Or=[0,[]], T=100)  % no movement -- Part 1, 2, 3
+  ).
+
+get_num(oracle, X) :-
+  internal_grid_size(N),
+  ( part_module(1)    -> X = 1
+  ; part_module(2)    -> X = 1
+  ; part_module(3)    -> X = 10
+  ; part_module(4)    -> X = N/2
+  ; part_module(test) -> X = N/2
+  ; otherwise -> fail
+  ).
+get_num(charging_station, X) :-
+  internal_grid_size(N),
+  ( part_module(1)    -> X = 4
+  ; part_module(2)    -> X = 4
+  ; part_module(3)    -> X = 2
+  ; part_module(4)    -> X = N/10
+  ; part_module(test) -> X = N/10
+  ; otherwise -> fail
+  ).
+get_num(thing, X) :-
+  internal_grid_size(N),
+  ( part_module(1)    -> X = 80
+  ; part_module(2)    -> X = 80
+  ; part_module(3)    -> random(85, 101, X)
+  ; part_module(4)    -> X = N*N/4
+  ; part_module(test) -> X = N*N/4
+  ; otherwise -> fail
+  ).
 
 %%% End of changeable parameters %%%
 
+%%%%%%%%%% map predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% map_adjacent(+Pos, ?AdjPos, ?Occ)
+% Occ = empty / c(42) / o(37) - charging station / oracle and ids
+map_adjacent(Pos, AdjPos, OID) :-
+  nonvar(Pos),
+  internal_poss_step(Pos, _M, AdjPos, 1),
+  ( api_(4)   -> query_world( check_pos, [AdjPos, OID])
+  ; otherwise -> (write('Unknown API: *'), api_(P), write(P), write('*'), nl)
+  ).
+
+% map_distance(+Pos1, +Pos2, ?Distance)
+% Manhattan distance between two grid squares
+map_distance(p(X,Y),p(X1,Y1), D) :-
+  D is abs(X - X1) + abs(Y - Y1).
+%%%%%%%%%% map predicates %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % assign drawable features to the agent
 % DrawableA has format [AgentId, Shape(n sides), Colour, initialX, initialY]
@@ -54,7 +106,10 @@ drawable_agent(A , DrawableA) :-
   random_member(C, [purple, blue, beige, white, gray, pink]),!,
   random_member(Cpath, [purple, blue, beige, white, gray, pink]),!,
   assert(ailp_internal(agent_colour_path(A, Cpath))),
-  random_free_pos(p(X,Y)),
+  ( part_module(1) -> X=1, Y=1
+  ; part_module(2) -> X=1, Y=1
+  ; otherwise      -> random_free_pos(p(X,Y))
+  ),
   assert(ailp_internal(agent_position(A, p(X,Y)))),
   internal_topup(Emax),
   assert(ailp_internal(agent_energy(A, Emax))),
@@ -110,8 +165,8 @@ agent_current_energy(Agent, Energy) :-
   nonvar(Agent),
   var(Energy),
   ailp_internal(agent_energy(Agent,Energy)),
-  atomic_list_concat(['Current energy:',Energy],' ',A),
-  do_command([Agent,console,A]).
+  atomic_list_concat(['Current energy:',Energy],' ',_A).
+  %do_command([Agent,console,A]).
 
 % agent_current_position(+Agent, -Pos)
 agent_current_position(Agent, Pos) :-
@@ -120,44 +175,51 @@ agent_current_position(Agent, Pos) :-
   ailp_internal(agent_position(Agent,Pos)).
 
 % agent_topup_energy(+Agent, +OID)
-% Agent's position needs to be map_adjacent to charging station identified by OID
+% Agent's position needs to be map_adj to charging station identified by OID
 agent_topup_energy(Agent, OID) :-
   nonvar(Agent),
   nonvar(OID),
   agent_current_position(Agent,Pos),
-  map_adjacent(Pos, _AdjPos, OID),
+  map_adj(Pos, _AdjPos, OID),
   OID = c(_),
   retract(ailp_internal(agent_energy(Agent, _E))),
   internal_topup(Emax),
   assert(ailp_internal(agent_energy(Agent,Emax))).
 
 % agent_ask_oracle(+Agent, +OID, +Question, -Answer)
-% Agent's position needs to be map_adjacent to oracle identified by OID
+% Agent's position needs to be map_adj to oracle identified by OID
 % fails if oracle already visited by Agent
 agent_ask_oracle(Agent, OID, Question, Answer) :-
   nonvar(Agent),
   nonvar(OID),
-  ( game_status(running) -> true
-  ; otherwise            -> do_command([Agent, console, 'start the game first']), fail
+  ( part_module(2) -> true
+  ; otherwise      -> ( game_status(running) -> true
+                      ; otherwise            -> do_command([Agent, console, 'start the game first']), fail
+                      ),
+                      \+ ailp_internal(agent_visited_oracle(Agent, OID))
   ),
-  \+ ailp_internal(agent_visited_oracle(Agent, OID)),
   nonvar(Question),
   var(Answer),
-  internal_topup(Emax),
-  Cost is ceiling(Emax/10),
-  ailp_internal(agent_energy(Agent,Energy)),
-  ( Energy>=Cost -> agent_current_position(Agent,Pos),
-                   map_adjacent(Pos, AdjPos, OID),
-                   OID = o(_),
-                   internal_object(OID, AdjPos, Options),
-                   member( question(Q)/answer(A),Options),
-                   ( Question=Q -> Answer=A ; Answer='I do not know' ),
-                   atomic_list_concat( [Question,Answer],': ',AA),
-                   internal_use_energy( Agent,Cost),
-                   assert( ailp_internal(agent_visited_oracle(Agent, OID)))
-  ; otherwise -> Answer='Sorry, not enough energy',AA=Answer
-  ),
-  do_command([Agent,console,AA]).
+  ( part_module(2) -> OID = o(_),
+                      internal_object(OID, _AdjPos, Options),
+                      member(question(Q)/answer(A),Options),
+                      ( Question=Q -> Answer=A ; Answer='I do not know' )
+  ; otherwise      -> internal_topup(Emax),
+                      Cost is ceiling(Emax/10),
+                      ailp_internal(agent_energy(Agent,Energy)),
+                      ( Energy>=Cost -> agent_current_position(Agent,Pos),
+                                       map_adj(Pos, AdjPos, OID),
+                                       OID = o(_),
+                                       internal_object(OID, AdjPos, Options),
+                                       member( question(Q)/answer(A),Options),
+                                       ( Question=Q -> Answer=A ; Answer='42' ),
+                                       atomic_list_concat( [Question,Answer],': ',AA),
+                                       internal_use_energy( Agent,Cost),
+                                       assert( ailp_internal(agent_visited_oracle(Agent, OID)))
+                      ; otherwise -> Answer='Sorry, not enough energy',AA=Answer
+                      ),
+                      do_command([Agent,console,AA])
+  ).
 
 % agent_colour_path(+Agent, ?ColourPath)
 agent_colour_path(Agent, ColourPath) :-
@@ -177,7 +239,7 @@ agent_do_moves(Agent, [H|T]) :-
   agent_do_move(Agent, H),
   agent_do_moves(Agent,T).
 % agent_do_move(+Agent, +To)
-% Has constraint that To is map_adjacent to Agent's current position
+% Has constraint that To is map_adj to Agent's current position
 % Reduces energy by 1 if step is valid
 agent_do_move(Agent,To) :-
   nonvar(Agent),
@@ -185,9 +247,9 @@ agent_do_move(Agent,To) :-
   game_status(running),
   agent_current_energy(Agent, F),
   F>0,
-  %% check p(X,Y) if To is map_adjacent to current position and free
+  %% check p(X,Y) if To is map_adj to current position and free
   agent_current_position(Agent,Pos),
-  map_adjacent(Pos, To, Obj),
+  map_adj(Pos, To, Obj),
   Obj = empty,!,
   %% send move to server
   p(X,Y) = To,
@@ -214,21 +276,20 @@ ailp_reset :-
   findall(A, (ailp_internal(agent_energy(A,_))), Agents),
   retractall(ailp_internal(_)),
   retractall(my_agent(_)),
-  init_things(oracle,N/2),
-  init_things(charging_station,N/10),
-  init_things(thing,N*N/4),
+  get_num(charging_station, NC),
+  init_things(charging_station,NC),
+  get_num(oracle, NO),
+  init_things(oracle,NO),
+  get_num(thing, NT),
+  init_things(thing,NT),
   wp:init_identity,  % defined in wp.pl
   maplist( drawable_agent, Agents, DrawableAgents),
   append( DrawableAgents, [[dyna, 0,red, 1,1]], AllAgents), % adds a dummy agent to use in do_command predicate
-  reset([
-    grid_size=N,
-    cells=[
-      [green, 1,1, N,N]
-    ],
-    agents = AllAgents
-  ]),
-  maplist( colour_agent_position, DrawableAgents),
-  internal_colour_map,  % make objects visible at the start
+  ( part_module(2) -> true
+  ; otherwise      -> reset([grid_size=N, cells=[[green,1,1,N,N]], agents=AllAgents]),
+                      maplist( colour_agent_position, DrawableAgents),
+                      internal_colour_map  % make objects visible at the start
+  ),
   assert(ailp_internal(game_status(ready))).
 
 colour_agent_position([A,_,_,X,Y]) :-
@@ -321,6 +382,15 @@ internal_colour_map :-
   fail.
 internal_colour_map.
 
+init_things(Label,_) :-
+  (part_module(1);part_module(2)),!,
+  ( Label=oracle           -> S=[164]
+  ; Label=charging_station -> S=[720,1529,659,8]
+  ; Label=thing            -> S=[2,6,10,11,12,15,16,17,81,85,86,88,93,94,165,171,172,173,241,242,244,247,257,258,320,322,324,328,329,331,401,402,405,406,409,413,414,416,482,498,560,563,566,573,575,644,645,657,727,807,813,818,880,886,890,898,961,972,978,1041,1043,1044,1047,1059,1128,1135,1139,1204,1206,1207,1214,1217,1287,1292,1298,1364,1374,1378,1443,1445,1446,1449,1521,1525,1530,1532,1534,1537]
+  ; otherwise              -> S=[], fail
+  ),
+  internal_grid_size(N),
+  internal_things(S,N,Label,1).
 init_things(Label,Exp) :-
   K is ceiling(Exp),   % round up if Exp evaluates to a fraction
   KK = 99999,
@@ -371,7 +441,7 @@ move_objects(N, Os, Label, Colour, PossMoves) :-
   move_objects( N1, L, Label, Colour, PossMoves).
 move_object([I,Pos], Label, Colour, PossMoves) :-
   Fact =.. [Label,I,Pos],
-  map_adjacent_random(Pos, NewPos, PossMoves),
+  map_adj_random(Pos, NewPos, PossMoves),
   NewFact =.. [Label, I, NewPos],
   assert(ailp_internal(NewFact)),
   retract(ailp_internal(Fact)),
@@ -380,18 +450,18 @@ move_object([I,Pos], Label, Colour, PossMoves) :-
   do_command([dyna, colour, X0, Y0, green]),
   do_command([dyna, colour, X, Y, Colour]).
 
-%map_adjacent_random(+P, ?AdjPos, +PassMoves).
+%map_adj_random(+P, ?AdjPos, +PassMoves).
 % generates a position adjacent to P
-map_adjacent_random(P, AdjPos, PossMoves) :-
+map_adj_random(P, AdjPos, PossMoves) :-
   nonvar(P),
   random_member(M, PossMoves),
   compute_step(P,M,PossPos,1),
   ( check_pos(PossPos, empty) -> AdjPos = PossPos
   ; otherwise                 -> delete( PossMoves, M, PossMoves1),
-                                  map_adjacent_random(P, AdjPos, PossMoves1)
+                                  map_adj_random(P, AdjPos, PossMoves1)
   ).
 
-map_adjacent(Pos, AdjPos, OID) :-
+map_adj(Pos, AdjPos, OID) :-
   nonvar(Pos),
   internal_poss_step(Pos, _M, AdjPos, 1),
   check_pos(AdjPos, OID).
