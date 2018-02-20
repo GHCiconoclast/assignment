@@ -7,17 +7,17 @@ automarklocation="$librarylocation/assignment1_automark.pl"
 
 # define a directory with submissions or a single file
 if [ -z "$1"  ] ; then
-  echo "Please supply and argument containing a path to a folder with submissions"
-  echo "    \`./runtest.sh ./ASGNM1\`"
-  echo "Or just a single submission file"
-  echo "    \`./runtest.sh ./ASGNM1/12345/assignment1_12345.pl\`"
-  echo "You can also check particular question"
-  echo "    \`./runtest.sh ./ASGNM1 question\` or"
-  echo "    \`./runtest.sh ./ASGNM1/12345/assignment1_12345.pl question\`"
-  echo "\nAlternatively you can generate tests"
-  echo "    \`./runtest.sh gentest\`"
-  echo "or generate csv file for FEN submission"
-  echo "    \`./runtest.sh ./ASGNM1 safe\`"
+  echo "Please supply an argument containing a path to a folder with submissions"
+  echo "    \`./automark.sh /path/to/ASGNM1\`"
+  echo "...or just a single submission file"
+  echo "    \`./automark.sh /path/to/ASGNM1/12345/assignment1_12345.pl\`"
+  echo "You can also check a particular question"
+  echo "    \`./automark.sh /path/to/ASGNM1 question\` or"
+  echo "    \`./automark.sh /path/to/ASGNM1/12345/assignment1_12345.pl question\`"
+  echo "\nAlternatively you can generate automarking tests"
+  echo "    \`./automark.sh gentest\`"
+  echo "...or generate a csv file for SAFE submission"
+  echo "    \`./automark.sh /path/to/ASGNM1 safe\`"
   exit
 fi
 subs="$1"
@@ -35,7 +35,7 @@ if [ ! -e "$testfile" ] ; then
   exit
 fi
 
-# if asked generate csv for FEN upload
+# if asked generate csv for SAFE upload
 if [ "$2" == "safe" ] ; then
   if [ -d "$subs" ] ; then
     echo "Student, Asgnm1, Feedback" > Asgnm1_safe.csv
@@ -106,7 +106,7 @@ if [ -d "$subs" ] ; then
       if [ ${student##*/} == "$candidate_number" ] && [ "$candidate_number" == "$file_candidate" ] ; then
         true
       else
-        errcan="FEN candidate number ${student##*/}; candidate_number/1 predicate $candidate_number; and file name $file_candidate do not agree!\n"
+        errcan="UoB candidate number ${student##*/}; candidate_number/1 predicate $candidate_number; and file name $file_candidate do not agree!\n"
         echo "$errcan" >> comments.txt
         echo "$errcan" >> stats.txt
         echo "$errcan"
@@ -161,7 +161,7 @@ elif [ -e "$subs" ] ; then
     if [ "$candidate" == "$candidate_number" ] && [ "$candidate_number" == "$file_candidate" ] ; then
       true
     else
-      errcan="FEN candidate number $candidate; candidate_number/1 predicate $candidate_number; and file name $file_candidate do not agree!\n"
+      errcan="UoB candidate number $candidate; candidate_number/1 predicate $candidate_number; and file name $file_candidate do not agree!\n"
       echo "$errcan" >> comments.txt
       echo "$errcan" >> stats.txt
       echo "$errcan"

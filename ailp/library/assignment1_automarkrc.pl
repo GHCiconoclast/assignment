@@ -39,6 +39,7 @@ automarkrc(
    ,part(q5b,3,[check(((clause(q5_corner_move2,B),am_writes(clause((q5_corner_move2:-B))),nl)->q5_corner_move2->true))])
    ,part(q6,5,[list(true->q6_spiral(L)->true)])
    ,part(extra,2,[])
+   ,part(total,25,[])
    ]
   ).
 

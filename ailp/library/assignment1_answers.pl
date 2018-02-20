@@ -25,7 +25,7 @@ q1(ailp_start_position(P)).
 q2a(new_pos(p(1,1), s, p(X,Y))).
 q2a(new_pos(p(1,1), s, P)).
 
-q2b(109).
+q2b(136).
 
 q3([s,e,w,n]).
 
