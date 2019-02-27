@@ -32,9 +32,61 @@ q6_spiral_test([P,PP|L]) :-m(M),
 
 
 %Add generator
-q6_spiral(L):-q6_spiral_test(L),
-              complete(L).     
+% q6_spiral(L):-q6_spiral_test(L),
+%               complete(L).
 
+%Plagiarism
+
+corner(p(1,1)).
+corner(p(1,N))    :-ailp_grid_size(N).
+corner(p(N,1))    :-ailp_grid_size(N).
+corner(p(N,N))    :-ailp_grid_size(N).
+
+mprime(e).
+mprime(s).
+mprime(w).
+mprime(n).
+
+q6_spiral(L) :-
+  corner(p(X,Y)),
+  q6_spiral(p(1,1),L),
+  q6_spiral_test(L),
+  show_list_move(L).
+% P: current position
+% L: path taken by agent
+q6_spiral(P,L) :-
+  q6_spiral(P,[P],Ps),
+  reverse(Ps,L).
+q6_spiral(_,Ps,Ps) :- complete(Ps).
+q6_spiral(P,Ps,R) :-
+  mprime(M),
+  new_pos(P,M,P1),
+  \+ memberchk(P1,Ps),
+  q6_spiral(P1,[P1|Ps],R).
+
+show_list_move([]).
+show_list_move([P,PP|Ps]):-ailp_show_move(PP,P),
+                           show_list_move([PP|Ps]).
+
+ring_check(L,Deep):-ailp_grid_size(N),
+                    Width  is N - Deep * 2,
+                    Length is 4 * Width - 4,
+                    length(L,Length),
+                    allInRing(L,Deep).
+
+allInRing([],Deep).
+allInRing([P|Ps],Deep):-inring(P,Deep),
+                        allInRing(Ps,Deep).
+
+inring(p(X,Y),Deep):-ailp_grid_size(N),
+                     I is 1 + Deep,
+                     J is N - Deep,
+                     between(I,J,K),
+                     inring(p(X,Y),I,J,K).
+inring(p(I,K),I,J,K).
+inring(p(K,J),I,J,K).
+inring(p(J,K),I,J,K).
+inring(p(J,J),I,J,K).
 % Helper functions
 
 head([H|T],H).
