@@ -18,7 +18,7 @@ q5_corner_move2:-
   ailp_show_move(p(1,N),p(N,N)),
   ailp_show_move(p(N,N),p(N,1)).
 
-%Need mutually exclusive conditions
+% Q6 doesn't work
 q6_spiral_test([p(1,1)]).
 q6_spiral_test([p(1,N)])    :-ailp_grid_size(N).
 q6_spiral_test([p(N,1)])    :-ailp_grid_size(N).
@@ -37,10 +37,14 @@ q6_spiral_test([P,PP|L]) :-m(M),
 
 %Plagiarism
 
-corner(p(1,1)).
-corner(p(1,N))    :-ailp_grid_size(N).
-corner(p(N,1))    :-ailp_grid_size(N).
-corner(p(N,N))    :-ailp_grid_size(N).
+edge(p(1,K)):-ailp_grid_size(N),
+              between(1,N,K).
+edge(p(K,1)):-ailp_grid_size(N),
+              between(1,N,K).
+edge(p(N,K)):-ailp_grid_size(N),
+              between(1,N,K).
+edge(p(K,N)):-ailp_grid_size(N),
+              between(1,N,K).
 
 mprime(e).
 mprime(s).
@@ -48,45 +52,62 @@ mprime(w).
 mprime(n).
 
 q6_spiral(L) :-
-  corner(p(X,Y)),
-  q6_spiral(p(1,1),L),
-  q6_spiral_test(L),
+  edge(p(X,Y)),
+  q6_spiral(p(X,Y),L),
+  % q6_spiral_test(L),
   show_list_move(L).
 % P: current position
-% L: path taken by agent
+% L: path taken by agentq6_spiral_test(L),
 q6_spiral(P,L) :-
-  q6_spiral(P,[P],Ps),
+  q6_spiral(P,[P],Ps,0),
   reverse(Ps,L).
 q6_spiral(_,Ps,Ps) :- complete(Ps).
-q6_spiral(P,Ps,R) :-
+q6_spiral(P,Ps,R,Deep) :-
   mprime(M),
   new_pos(P,M,P1),
   \+ memberchk(P1,Ps),
-  q6_spiral(P1,[P1|Ps],R).
+  inring(P1,Deep),
+  q6_spiral(P1,[P1|Ps],R,Deep).
+q6_spiral(P,Ps,R,Deep) :-
+  mprime(M),
+  new_pos(P,M,P1),
+  \+ memberchk(P1,Ps),
+  \+ inring(P1,Deep),
+  ring_check(Ps,Deep),
+  NewDepth is Deep + 1,
+  q6_spiral(P1,[P1|Ps],R,NewDepth).
 
 show_list_move([]).
 show_list_move([P,PP|Ps]):-ailp_show_move(PP,P),
                            show_list_move([PP|Ps]).
 
 ring_check(L,Deep):-ailp_grid_size(N),
-                    Width  is N - Deep * 2,
-                    Length is 4 * Width - 4,
+                    Width is N - Deep * 2,
                     length(L,Length),
-                    allInRing(L,Deep).
+                    MinLength is 4 * Width - 4,
+                    Length >= MinLength,
+                    take(MinLength, RevL, RingL),
+                    allInRing(RingL,Deep).
 
-allInRing([],Deep).
+allInRing([],_Deep).
 allInRing([P|Ps],Deep):-inring(P,Deep),
                         allInRing(Ps,Deep).
 
+% Uses cut, can only be used for tests
 inring(p(X,Y),Deep):-ailp_grid_size(N),
                      I is 1 + Deep,
                      J is N - Deep,
                      between(I,J,K),
-                     inring(p(X,Y),I,J,K).
-inring(p(I,K),I,J,K).
-inring(p(K,J),I,J,K).
-inring(p(J,K),I,J,K).
-inring(p(J,J),I,J,K).
+                     inring(p(X,Y),I,J,K),!.
+inring(p(I,K),I,_J,K).
+inring(p(J,K),_I,J,K).
+inring(p(K,I),I,_J,K).
+inring(p(K,J),_I,J,K).
 % Helper functions
 
-head([H|T],H).
+head([H|_T],H).
+
+% Taken from https://stackoverflow.com/questions/27151274/prolog-take-the-first-n-elements-of-a-list
+take(N, _, Xs) :- N =< 0, !, N =:= 0, Xs = [].
+take(_, [], []).
+take(N, [X|Xs], [X|Ys]) :- M is N-1, take(M, Xs, Ys).
