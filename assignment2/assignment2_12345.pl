@@ -1,5 +1,7 @@
 candidate_number(12345).
 
+:- use_module(library(apply)).
+
 solve_task(Task,Cost):-
   my_agent(Agent),
   query_world( agent_current_position, [Agent,P] ),
@@ -32,3 +34,18 @@ achieved(find(O),Current,RPath,Cost,NewPos) :-
 
 search(F,N,N,1) :-
   map_adjacent(F,N,empty).
+
+goal([p(3,2) | _Rest]).
+
+search_bf([Goal|_Rest2], Goal):-
+  goal(Goal).
+search_bf([Current|Rest], Goal):-
+  Current = [P|_RPath],
+  setof(t(N,Current),map_adjacent(P,N,empty),Ns),
+  foldl(f, Ns, [], NewPaths),
+  append(Rest,NewPaths,NewAgenda),
+  search_bf(NewAgenda, Goal).
+
+f(t(Pos,Path), Paths, [[Pos|Path] | Paths]).
+  
+  
